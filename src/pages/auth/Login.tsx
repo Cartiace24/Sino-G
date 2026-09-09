@@ -75,7 +75,7 @@ export function Login() {
       <Link className="backlink" to="/">
         <ArrowLeft size={16} /> BACK
       </Link>
-      <p className="kicker">WELCOME BACK</p>
+      <p className="kicker">SINO G</p>
       <h1 className="display lg">
         LOG
         <br />
