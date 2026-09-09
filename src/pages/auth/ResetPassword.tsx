@@ -6,7 +6,7 @@ import { friendlyError } from '../../utils/errors';
 import { useToast } from '../../components/common/Toast';
 import { LoadingRows } from '../../components/common/Feedback';
 import { Button } from '../../components/ui/button';
-import { FieldError, Input, Label } from '../../components/ui/input';
+import { FieldError, Input, Label, PasswordInput } from '../../components/ui/input';
 
 export function ResetPassword() {
   const { user, loading, isRecoverySession, signOut } = useAuth();
@@ -96,9 +96,8 @@ export function ResetPassword() {
       <form onSubmit={onSubmit}>
         <div className="field">
           <Label htmlFor="password">New Password</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -106,9 +105,8 @@ export function ResetPassword() {
         </div>
         <div className="field">
           <Label htmlFor="confirm">Confirm Password</Label>
-          <Input
+          <PasswordInput
             id="confirm"
-            type="password"
             autoComplete="new-password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}

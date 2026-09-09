@@ -12,7 +12,7 @@ import { friendlyError } from '../../utils/errors';
 import { useToast } from '../../components/common/Toast';
 import { Avatar } from '../../components/common/Avatar';
 import { Button } from '../../components/ui/button';
-import { FieldError, Input, Label } from '../../components/ui/input';
+import { FieldError, Input, Label, PasswordInput } from '../../components/ui/input';
 
 function useLocalToggle(key: string, initial: boolean): [boolean, () => void] {
   const [v, setV] = useState(() => {
@@ -148,7 +148,7 @@ export function Settings() {
         <span className="kicker">ACCOUNT</span>
         <div className="field" style={{ marginTop: 10 }}>
           <Label htmlFor="pw">New password</Label>
-          <Input id="pw" type="password" autoComplete="new-password" placeholder="At least 8 characters" value={pw} onChange={(e) => setPw(e.target.value)} />
+          <PasswordInput id="pw" autoComplete="new-password" placeholder="At least 8 characters" value={pw} onChange={(e) => setPw(e.target.value)} />
         </div>
         {pwOk && <p className="small" style={{ color: 'var(--free)', fontWeight: 600, marginBottom: 8 }}>{pwOk}</p>}
         <button

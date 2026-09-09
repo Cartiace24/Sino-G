@@ -133,6 +133,15 @@ body.auth .topbar,body.auth .tabbar,body.auth .sidebar{display:none !important}
   border-radius:var(--radius);min-height:54px;padding:0 16px;outline:none;font-size:16px}
 /* 16px inputs: below this iOS Safari zooms the viewport on focus. */
 .input:focus{border-color:var(--ink)}
+/* Kill the native Edge reveal eye (hover-only, vanishes on mouse-out —
+   the reported bug). PasswordInput below replaces it permanently. */
+input[type="password"]::-ms-reveal{display:none}
+.pw-wrap{position:relative;display:block}
+.pw-wrap .input{width:100%;padding-right:48px}
+.pw-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);
+  width:38px;height:38px;display:grid;place-items:center;border-radius:9px;
+  color:var(--muted)}
+.pw-toggle:hover{color:var(--ink)}
 textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
 .auth-wrap{max-width:420px;margin:0 auto;padding:26px 4px 40px}
 .backlink{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--ink-2);margin-bottom:22px}

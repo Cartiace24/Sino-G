@@ -7,7 +7,7 @@ import { getLastUsername, resolveLoginEmail } from '../../lib/login-memory';
 import { friendlyError } from '../../utils/errors';
 import { useToast } from '../../components/common/Toast';
 import { Button } from '../../components/ui/button';
-import { FieldError, Input, Label } from '../../components/ui/input';
+import { FieldError, Input, Label, PasswordInput } from '../../components/ui/input';
 
 export function Login() {
   const { user, loading, isRecoverySession } = useAuth();
@@ -98,9 +98,8 @@ export function Login() {
         </div>
         <div className="field">
           <Label htmlFor="password">Password</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="current-password"
             placeholder="••••••••"
             value={password}

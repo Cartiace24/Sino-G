@@ -6,7 +6,7 @@ import { authService } from '../../services/auth.service';
 import { friendlyError } from '../../utils/errors';
 import { useToast } from '../../components/common/Toast';
 import { Button } from '../../components/ui/button';
-import { FieldError, Input, Label } from '../../components/ui/input';
+import { FieldError, Input, Label, PasswordInput } from '../../components/ui/input';
 
 function suggestUsername(email: string): string {
   const base = email
@@ -97,9 +97,8 @@ export function Register() {
         </div>
         <div className="field">
           <Label htmlFor="password">Password</Label>
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="new-password"
             placeholder="At least 8 characters"
             value={password}
@@ -108,9 +107,8 @@ export function Register() {
         </div>
         <div className="field">
           <Label htmlFor="confirm">Confirm password</Label>
-          <Input
+          <PasswordInput
             id="confirm"
-            type="password"
             autoComplete="new-password"
             placeholder="Repeat it"
             value={confirm}
