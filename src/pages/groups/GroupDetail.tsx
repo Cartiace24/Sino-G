@@ -325,7 +325,7 @@ export function GroupDetail() {
           Find best time
         </Button>
         <Button variant="line" size="sm" onClick={() => navigate(`/g?group=${groupId}`)}>
-          Ask who&apos;s down ⚡
+          Ask who&apos;s down
         </Button>
         <Button variant="line" size="sm" onClick={() => navigate(`/groups/${groupId}/chat`)}>
           <MessageCircle size={15} /> Chat
@@ -360,7 +360,7 @@ export function GroupDetail() {
         </p>
       ) : (
         <p className="small muted" style={{ marginTop: 8 }}>
-          No hangouts yet. Start the first one. ⚡
+          No hangouts yet. Start the first one.
         </p>
       )}
 

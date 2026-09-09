@@ -227,7 +227,7 @@ export function Plan() {
                   navigate(`/g?group=${group!.id}&when=${encodeURIComponent(best.slot.label)}`)
                 }
               >
-                Ask the group ⚡
+                Ask the group
               </button>
             </div>
           </div>

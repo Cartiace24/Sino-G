@@ -25,9 +25,9 @@ export function Welcome() {
       </p>
       <div className="ticker">
         <div>
-          &nbsp;WHO&apos;S FREE TONIGHT? &nbsp;●&nbsp; SINO G? &nbsp;●&nbsp; FIND YOUR BEST TIME
-          &nbsp;●&nbsp; ASK THE GROUP ⚡ &nbsp;●&nbsp; WHO&apos;S FREE TONIGHT? &nbsp;●&nbsp; SINO G?
-          &nbsp;●&nbsp; FIND YOUR BEST TIME &nbsp;●&nbsp; ASK THE GROUP ⚡ &nbsp;●&nbsp;
+          &nbsp;WHO&apos;S FREE TODAY? &nbsp;●&nbsp; SINO G? &nbsp;●&nbsp; FIND YOUR BEST TIME
+          &nbsp;●&nbsp; ASK THE GROUP &nbsp;●&nbsp; WHO&apos;S FREE TODAY? &nbsp;●&nbsp; SINO G?
+          &nbsp;●&nbsp; FIND YOUR BEST TIME &nbsp;●&nbsp; ASK THE GROUP &nbsp;●&nbsp;
         </div>
       </div>
       <Link className="btn btn-dark btn-block btn-big" to="/register">

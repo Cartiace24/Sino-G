@@ -253,7 +253,7 @@ export function Today() {
           className="btn btn-green btn-block btn-big btn-chunk"
           onClick={() => navigate('/g')}
         >
-          ⚡ WHO&apos;S DOWN?
+          WHO&apos;S DOWN?
         </button>
       </div>
     </>

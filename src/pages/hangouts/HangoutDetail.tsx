@@ -21,7 +21,7 @@ const OPTIONS: { value: HangoutResponseValue; label: string; cls: string }[] = [
 ];
 
 const CONFIRM_MSG: Record<HangoutResponseValue, string> = {
-  down: "<b>🔥 You're down!</b> The group sees it live.",
+  down: "<b>You're down!</b> The group sees it live.",
   maybe: '<b>Maybe noted.</b> We\'ll keep you posted.',
   unavailable: "<b>Marked can't.</b> Next time.",
 };
@@ -60,8 +60,8 @@ export function HangoutDetail() {
     onSuccess: (count) => {
       toast(
         count > 0
-          ? `<b>⚡ Nudged!</b> ${count} ${count === 1 ? 'friend was' : 'friends were'} notified in-app.`
-          : `<b>⚡ Nudged!</b> Everyone's already down.`,
+          ? `<b>Nudged!</b> ${count} ${count === 1 ? 'friend was' : 'friends were'} notified in-app.`
+          : `<b>Nudged!</b> Everyone's already down.`,
       );
     },
     onError: (err) => toast(friendlyError(err, 'Could not send the nudge.')),
@@ -88,7 +88,7 @@ export function HangoutDetail() {
         qc.invalidateQueries({ queryKey: ['hangout-counts'] });
       }
       if (user) qc.invalidateQueries({ queryKey: qk.myHangouts(user.id) });
-      toast(status === 'closed' ? 'Hangout closed. Have fun. 🎉' : 'Hangout cancelled.');
+      toast(status === 'closed' ? 'Hangout closed. Have fun.' : 'Hangout cancelled.');
       navigate('/g');
     },
     onError: (err) => toast(friendlyError(err, 'Could not update the hangout.')),
@@ -123,7 +123,7 @@ export function HangoutDetail() {
       </Link>
       <div className="hangalert">
         <span className="kicker">
-          {h.status === 'active' ? '🔥 HANGOUT ALERT · LIVE' : `· ${h.status.toUpperCase()} ·`}
+          {h.status === 'active' ? 'HANGOUT ALERT · LIVE' : `· ${h.status.toUpperCase()} ·`}
         </span>
         <p className="small" style={{ color: '#cfccc2', marginTop: 10, letterSpacing: '.1em', fontWeight: 700 }}>
           {(h.creator?.display_name ?? 'SOMEONE').toUpperCase()} IS ASKING:
@@ -167,12 +167,12 @@ export function HangoutDetail() {
           </div>
         </>
       ) : (
-        <p className="small muted">This hangout is {h.status}. Catch the next one. ⚡</p>
+        <p className="small muted">This hangout is {h.status}. Catch the next one.</p>
       )}
 
       <hr className="rule" />
       <div className="row-between">
-        <span className="kicker">🔥 {String(downCount).padStart(2, '0')} PEOPLE ARE DOWN</span>
+        <span className="kicker">{String(downCount).padStart(2, '0')} PEOPLE ARE DOWN</span>
         <span className="small muted">updates live</span>
       </div>
       <div className="rows" style={{ marginTop: 8 }}>
@@ -185,7 +185,7 @@ export function HangoutDetail() {
               </strong>
               <small>asked the group · is down</small>
             </span>
-            <span className="right">🔥</span>
+            <span className="right"><span className="dot free" /></span>
           </div>
         )}
         {down
@@ -200,7 +200,7 @@ export function HangoutDetail() {
                 </strong>
                 <small>is down · just now</small>
               </span>
-              <span className="right">🔥</span>
+              <span className="right"><span className="dot free" /></span>
             </div>
           ))}
         {maybe.map((r) => (

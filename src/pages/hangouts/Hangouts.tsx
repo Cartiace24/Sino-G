@@ -72,7 +72,7 @@ export function Hangouts() {
       setWhat('');
       setWhere('');
       setShowForm(false);
-      toast('<b>⚡ Asked!</b> The group has been pinged.');
+      toast('<b>Asked!</b> The group has been pinged.');
       navigate(`/g/${h.id}`);
     },
     onError: (err) => setError(friendlyError(err, 'Could not ask the group.')),
@@ -98,7 +98,7 @@ export function Hangouts() {
   return (
     <>
       <p className="kicker" style={{ marginTop: 14 }}>
-        SPONTANEOUS MODE ⚡ · {hangouts.length} LIVE NOW
+        SPONTANEOUS MODE · {hangouts.length} LIVE NOW
       </p>
       <h1 className="display xl">
         WHO&apos;S
@@ -150,7 +150,7 @@ export function Hangouts() {
           </div>
           <FieldError message={error} />
           <Button type="submit" variant="green" size="bigBlock" disabled={createMut.isPending}>
-            {createMut.isPending ? 'Asking…' : 'Ask the group ⚡'}
+            {createMut.isPending ? 'Asking…' : 'Ask the group'}
           </Button>
         </form>
       )}
@@ -183,7 +183,7 @@ export function Hangouts() {
                 <br />
                 <span className="small">
                   <b className="free-n" style={{ color: 'var(--free)' }}>
-                    🔥 {countsQ.data?.get(h.id) ?? '…'} down
+                    {countsQ.data?.get(h.id) ?? '…'} down
                   </b>{' '}
                   <span className="muted">· {h.location ?? 'TBD'}</span>
                 </span>
