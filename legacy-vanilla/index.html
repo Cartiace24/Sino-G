@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Sino G — Stop asking the group chat. See who's free.</title>
+<meta name="description" content="Sino G is a social availability app for friend groups." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="css/styles.css" />
+<script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+<div id="app">
+  <!-- DESKTOP SIDEBAR -->
+  <aside class="sidebar" id="sidebar" aria-label="Primary">
+    <a class="brand" href="#/today" data-nav>
+      <span class="brand-mark">G?</span>
+      <span class="brand-word">SINO&nbsp;G</span>
+    </a>
+    <nav class="side-nav">
+      <a href="#/today" data-route="today" data-nav><i data-lucide="sun"></i><span>TODAY</span></a>
+      <a href="#/plan" data-route="plan" data-nav><i data-lucide="calendar-days"></i><span>PLAN</span></a>
+      <a href="#/g" data-route="g" data-nav class="side-g"><em>G?</em><span>WHO'S DOWN</span><b class="live-dot"></b></a>
+      <a href="#/me" data-route="me" data-nav><i data-lucide="user"></i><span>ME</span></a>
+    </nav>
+    <div class="side-foot">
+      <button class="btn btn-green btn-block" data-goto="#/g">+ Start a hangout</button>
+      <button class="side-user" data-goto="#/me">
+        <span class="avatar av-isaiah">I</span>
+        <span><strong>Isaiah</strong><small>@sai · The Boys</small></span>
+        <i data-lucide="chevron-right"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-col">
+    <header class="topbar" id="topbar">
+      <a class="topbar-brand" href="#/today" data-nav>SINO&nbsp;G</a>
+      <span class="topbar-group" id="topbarGroup">THE BOYS ▾</span>
+      <button class="topbar-avatar avatar av-isaiah" data-goto="#/me" aria-label="Profile">I</button>
+    </header>
+
+    <main id="view" class="view"></main>
+
+    <!-- MOBILE BOTTOM NAV -->
+    <nav class="tabbar" id="tabbar" aria-label="Primary mobile">
+      <a href="#/today" data-route="today" data-nav><i data-lucide="sun"></i><span>TODAY</span></a>
+      <a href="#/plan" data-route="plan" data-nav><i data-lucide="calendar-days"></i><span>PLAN</span></a>
+      <a href="#/g" data-route="g" data-nav class="tab-g"><em>G?</em></a>
+      <a href="#/me-availability" data-route="me-availability" data-nav><i data-lucide="clock"></i><span>FREE?</span></a>
+      <a href="#/me" data-route="me" data-nav><i data-lucide="user"></i><span>ME</span></a>
+    </nav>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="js/app.js"></script>
+</body>
+</html>

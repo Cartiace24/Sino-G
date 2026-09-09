@@ -1,0 +1,4 @@
+/* Cloudflare Pages SPA fallback: serve index.html for all routes so
+   BrowserRouter deep links, refreshes, lazy chunks, and auth/OAuth
+   callback URLs resolve client-side. */
+/* /index.html 200

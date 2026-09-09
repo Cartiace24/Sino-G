@@ -1,0 +1,18 @@
+@import './styles/sinog.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Small glue between Tailwind preflight and the Sino G design system.
+   The approved visual identity lives in styles/sinog.css — nothing there
+   was redesigned for the backend integration. */
+#root {
+  min-height: 100dvh;
+}
+
+/* shadcn-style focus ring that respects the brand (no glow, just ink) */
+:where(a, button, input, select, textarea):focus-visible {
+  outline: 2px solid #181817;
+  outline-offset: 2px;
+}
