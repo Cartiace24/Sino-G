@@ -15,9 +15,9 @@ import { Button } from '../../components/ui/button';
 import type { HangoutResponseValue } from '../../types/database.types';
 
 const OPTIONS: { value: HangoutResponseValue; label: string; cls: string }[] = [
-  { value: 'down', label: "🔥 I'M DOWN", cls: 'down' },
-  { value: 'maybe', label: '⏳ MAYBE', cls: 'maybe-b' },
-  { value: 'unavailable', label: "✕ CAN'T", cls: 'cant' },
+  { value: 'down', label: "I'M DOWN", cls: 'down' },
+  { value: 'maybe', label: 'MAYBE', cls: 'maybe-b' },
+  { value: 'unavailable', label: "CAN'T", cls: 'cant' },
 ];
 
 const CONFIRM_MSG: Record<HangoutResponseValue, string> = {

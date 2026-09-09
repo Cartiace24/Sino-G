@@ -8,9 +8,9 @@ SINO G is a social coordination app designed to answer one question:
 
 SINO G helps friend groups coordinate plans by showing who's available, finding the best time to hang out, creating hangout requests, and letting members respond with:
 
-- 🔥 **I'm Down**
-- ⏳ **Maybe**
-- ✕ **Can't**
+- **I'm Down**
+- **Maybe**
+- **Can't**
 
 ## Tech Stack
 
