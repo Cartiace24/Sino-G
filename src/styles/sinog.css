@@ -123,6 +123,11 @@ body.auth .topbar,body.auth .tabbar,body.auth .sidebar{display:none !important}
 .row-between{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .muted{color:var(--muted)}
 .small{font-size:13px}
+/* ---------- spacing rhythm (12/18 scale; sections 18, inner 12) ---------- */
+.sec{margin-top:18px}
+.sec-sm{margin-top:12px}
+.stack-18{display:flex;flex-direction:column;gap:18px}
+.stack-12{display:flex;flex-direction:column;gap:12px}
 
 /* ---------- buttons ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;
@@ -243,17 +248,20 @@ textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
 .time-chip.sel{border-color:var(--ink);background:var(--ink);color:#fff}
 
 /* ---------- bars (group availability) ---------- */
-.bars{display:flex;flex-direction:column;gap:2px;margin-top:8px}
-.bar-row{display:grid;grid-template-columns:58px 1fr 30px;align-items:center;gap:8px;
+.bars{display:flex;flex-direction:column;gap:4px;margin-top:12px}
+.bar-row{display:grid;grid-template-columns:62px 1fr 44px;align-items:center;gap:8px;
   padding:9px 10px;border-radius:10px;border:1.5px solid transparent;width:100%;text-align:left}
-.bar-row .t{font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+.bar-row .t{font-size:12.5px;font-weight:700;color:var(--ink-2);white-space:nowrap;font-variant-numeric:tabular-nums}
+@media (prefers-reduced-motion:no-preference){
+  .bar-row,.bar-fill{transition:background .15s ease,border-color .15s ease,width .2s ease,opacity .2s ease}
+}
 /* nowrap: "8:30 AM" wrapped to two lines inside the 52px column at 320px. */
 .bar-track{height:26px;background:var(--bg-deep);border-radius:7px;position:relative;overflow:hidden}
 .bar-fill{height:100%;border-radius:7px;background:var(--ink)}
 .bar-row.best{border-color:var(--ink);background:var(--green-wash)}
 .bar-row.best .bar-fill{background:var(--green-deep)}
 .bar-row.best .t{color:var(--ink)}
-.bar-row .n{font-family:var(--font-d);font-weight:800;font-size:15px;text-align:right}
+.bar-row .n{font-family:var(--font-d);font-weight:800;font-size:13.5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .tag-best{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--green);
   font-size:10.5px;font-weight:800;letter-spacing:.14em;padding:5px 10px;border-radius:999px}
 .besthero{background:var(--ink);color:#fff;border-radius:16px;padding:24px 22px;margin:18px 0;position:relative;overflow:hidden}
@@ -313,8 +321,14 @@ textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
 .pulse{width:10px;height:10px;border-radius:50%;background:var(--orange);margin-top:7px;flex-shrink:0;animation:pl 1.6s infinite}
 @keyframes pl{0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,.5)}50%{box-shadow:0 0 0 7px rgba(255,107,53,0)}}
 .sheet{background:var(--paper);border:1.5px solid var(--ink);border-radius:16px;padding:22px 20px;margin-top:16px}
+/* ---------- pills: one system, three roles ----------
+   daytab = date nav (scrollable strip) · chip = filter/select (wrap row)
+   time-chip = legacy grid pick (same tokens) · seg = status only (semantic fills) */
 .chiprow{display:flex;flex-wrap:wrap;gap:8px}
-.chip{border:1.5px solid var(--line);background:var(--bg);padding:10px 15px;border-radius:999px;font-size:13.5px;font-weight:700}
+.daytab,.chip,.time-chip,.seg{transition:border-color .15s ease,background .15s ease,color .15s ease}
+.daytab:hover:not(.sel),.chip:hover:not(.sel),.time-chip:hover:not(.sel){border-color:var(--ink)}
+.daytab:active:not(.sel),.chip:active:not(.sel){transform:scale(.98)}
+.chip{border:1.5px solid var(--line);background:var(--paper);padding:10px 15px;border-radius:999px;font-size:13.5px;font-weight:700}
 .chip.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
 
 /* ---------- misc ---------- */

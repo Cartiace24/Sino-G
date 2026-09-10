@@ -114,7 +114,7 @@ export function Plan() {
 
   return (
     <>
-      <p className="kicker" style={{ marginTop: 14 }}>
+      <p className="kicker sec-sm">
         PLAN · {group?.name.toUpperCase()} · {memberIds.length} FRIENDS
       </p>
       <h1 className="display lg">
@@ -124,7 +124,7 @@ export function Plan() {
       </h1>
 
       {!paramGroupId && groups.length > 1 && (
-        <div className="daytabs" style={{ marginTop: 14 }}>
+        <div className="daytabs sec-sm">
           {groups.map((g) => (
             <button
               key={g.id}
@@ -137,8 +137,8 @@ export function Plan() {
         </div>
       )}
 
-      <div className="cal-anchor" ref={cal.ref}>
-        <div className="daytabs" style={{ marginTop: 6 }}>
+      <div className="cal-anchor sec-sm" ref={cal.ref}>
+        <div className="daytabs" style={{ marginTop: 0 }}>
           {days.map((d) => (
             <button
               key={d.iso}
@@ -171,9 +171,9 @@ export function Plan() {
         )}
       </div>
 
-      <div style={{ marginTop: 6 }}>
+      <div className="sec">
         <span className="kicker">TIME WINDOW</span>
-        <div className="chiprow" style={{ marginTop: 10 }}>
+        <div className="chiprow sec-sm">
           {(Object.keys(PRESETS) as (keyof typeof PRESETS)[]).map((p) => (
             <button
               key={p}
@@ -193,7 +193,7 @@ export function Plan() {
           </button>
         </div>
         {preset === 'custom' && (
-          <div className="timegrid" style={{ marginTop: 10, maxWidth: 420 }}>
+          <div className="timegrid sec-sm" style={{ maxWidth: 420 }}>
             <div>
               <Label htmlFor="win-from">From</Label>
               <Input
@@ -256,20 +256,35 @@ export function Plan() {
 
           <span className="kicker">TAP A TIME TO SEE WHO&apos;S FREE</span>
           <div className="bars">
-            {slots.map((s, i) => (
-              <button
-                key={s.start}
-                className={`bar-row${best.index === i ? ' best' : ''}`}
-                onClick={() => setSlotIdx(i)}
-                style={activeIdx === i && best.index !== i ? { borderColor: 'var(--ink)' } : undefined}
-              >
-                <span className="t">{s.label}</span>
-                <span className="bar-track">
-                  <span className="bar-fill" style={{ width: `${Math.round((s.score / max) * 100)}%` }} />
-                </span>
-                <span className="n">{s.free + s.maybe}</span>
-              </button>
-            ))}
+            {slots.map((s, i) => {
+              const count = s.free + s.maybe;
+              const isBest = best.index === i;
+              const isActive = activeIdx === i;
+              return (
+                <button
+                  key={s.start}
+                  className={`bar-row${isBest ? ' best' : ''}`}
+                  onClick={() => setSlotIdx(i)}
+                  aria-pressed={isActive}
+                  aria-label={`${s.label}, ${count} of ${memberIds.length} available${isBest ? ' (best time)' : ''}`}
+                  style={isActive && !isBest ? { borderColor: 'var(--ink)' } : undefined}
+                >
+                  <span className="t">{s.label}</span>
+                  <span className="bar-track">
+                    <span
+                      className="bar-fill"
+                      style={{
+                        width: `${Math.round((s.score / max) * 100)}%`,
+                        opacity: isBest ? 1 : 0.35 + 0.65 * (s.score / max),
+                      }}
+                    />
+                  </span>
+                  <span className="n">
+                    {count}/{memberIds.length}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           {active && (
@@ -306,7 +321,7 @@ export function Plan() {
           )}
         </>
       ) : (
-        <div style={{ marginTop: 16 }}>
+        <div className="sec">
           <EmptyState
             icon={null}
             title="No one's marked their schedule yet."
@@ -325,7 +340,7 @@ export function Plan() {
         </div>
       )}
 
-      <p className="small muted" style={{ marginTop: 16 }}>
+      <p className="small muted sec">
         <Link className="link-u" to={`/groups/${group!.id}`}>
           Back to {group?.name}
         </Link>
