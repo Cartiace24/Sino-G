@@ -18,8 +18,10 @@ export function AppShell() {
   const { profile, user } = useAuth();
   const { data: myGroups } = useMyGroups(user?.id);
   const unreadChat = useUnreadChatGroups(user?.id);
-  const chatGroups = (myGroups ?? []).slice(0, 5);
+  const chatGroups = (myGroups ?? []).slice(0, 4);
   const extraChats = (myGroups ?? []).length - chatGroups.length;
+  const groupRows = (myGroups ?? []).slice(0, 4);
+  const extraGroups = (myGroups ?? []).length - groupRows.length;
   // Single app-wide inbox subscription (self-guards when logged out).
   useRealtimeNotifications();
   const isPublic = PUBLIC_PATHS.includes(pathname);
@@ -65,6 +67,28 @@ export function AppShell() {
             <span>ME</span>
           </NavLink>
         </nav>
+        {groupRows.length > 0 && (
+          <nav className="side-chats" aria-label="Your groups">
+            <span className="side-chats-kicker">GROUPS</span>
+            {groupRows.map((g) => (
+              <NavLink
+                key={g.id}
+                to={`/groups/${g.id}`}
+                className={({ isActive }) => cn('side-chat', isActive && 'active')}
+              >
+                <span className="mini-avatar" aria-hidden>
+                  {g.name.trim()[0]?.toUpperCase() ?? '?'}
+                </span>
+                <span className="name">{g.name}</span>
+              </NavLink>
+            ))}
+            {extraGroups > 0 && (
+              <Link className="small muted" to="/groups" style={{ padding: '4px 12px' }}>
+                +{extraGroups} more
+              </Link>
+            )}
+          </nav>
+        )}
         {chatGroups.length > 0 && (
           <nav className="side-chats" aria-label="Group chats">
             <span className="side-chats-kicker">CHATS</span>
