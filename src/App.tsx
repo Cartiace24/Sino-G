@@ -4,6 +4,7 @@ import { AppShell } from './components/common/AppShell';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { ProtectedRoute } from './components/common/ProtectedRoute';
 import { ToastProvider } from './components/common/Toast';
+import { ConfirmProvider } from './components/common/ConfirmSheet';
 import { LoadingRows } from './components/common/Feedback';
 
 // Route-level code splitting: every page is its own chunk, loaded on visit.
@@ -99,7 +100,9 @@ function AppRoutes() {
 export default function App() {
   return (
     <ToastProvider>
-      <AppRoutes />
+      <ConfirmProvider>
+        <AppRoutes />
+      </ConfirmProvider>
     </ToastProvider>
   );
 }

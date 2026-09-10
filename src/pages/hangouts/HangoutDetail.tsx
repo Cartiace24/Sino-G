@@ -1,7 +1,7 @@
 import { Suspense, lazy, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Clock, MapPin, MessageCircle, Pencil, Share2, Users } from 'lucide-react';
+import { ArrowLeft, CalendarX, Clock, MapPin, MessageCircle, Pencil, Share2, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHangoutDetail } from '../../hooks/useHangouts';
 import { useMyGroups } from '../../hooks/useGroups';
@@ -177,7 +177,7 @@ export function HangoutDetail() {
     return (
       <div style={{ paddingTop: 30 }}>
         <EmptyState
-          icon={null}
+          icon={<CalendarX size={30} />}
           title="That hangout is gone."
           body="It may have been cancelled or the link is wrong."
           action={

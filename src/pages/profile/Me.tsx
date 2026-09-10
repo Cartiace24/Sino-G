@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Clock, Pencil, Plus, Settings2 } from 'lucide-react';
+import { ArrowRight, Clock, Pencil, Plus, Settings2, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups, useRealtimeGroupsList } from '../../hooks/useGroups';
 import { Avatar } from '../../components/common/Avatar';
@@ -47,7 +47,7 @@ export function Me() {
       ) : groups.length === 0 ? (
         <div style={{ marginTop: 10 }}>
           <EmptyState
-            icon={null}
+            icon={<Users size={30} />}
             title="You haven't found your people yet."
             body="Start your own barkada or join one with a code."
             action={

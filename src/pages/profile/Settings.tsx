@@ -9,6 +9,7 @@ import { storageService } from '../../services/storage.service';
 import { authService } from '../../services/auth.service';
 import { getTheme, setTheme, type Theme } from '../../lib/theme';
 import { useAlertsEnabled, useNotifEnabled } from '../../lib/preferences';
+import { useConfirm } from '../../components/common/ConfirmSheet';
 import { friendlyError } from '../../utils/errors';
 import { useToast } from '../../components/common/Toast';
 import { Avatar } from '../../components/common/Avatar';
@@ -31,6 +32,7 @@ export function Settings() {
   // here updates everywhere instantly, same-tab + cross-tab).
   const [notif, toggleNotif] = useNotifEnabled();
   const [alerts, toggleAlerts] = useAlertsEnabled();
+  const confirm = useConfirm();
   const [theme, setThemeState] = useState<Theme>(() => getTheme());
   const toggleTheme = () => {
     const next: Theme = theme === 'dark' ? 'light' : 'dark';
@@ -198,10 +200,14 @@ export function Settings() {
         <span className="kicker" style={{ color: 'var(--busy)' }}>DANGER ZONE</span>
         <button
           className="setrow danger"
-          onClick={() => {
-            if (window.confirm('Delete your Sino G account and profile? Your groups keep going without you. This can\'t be undone.')) {
-              delMut.mutate();
-            }
+          onClick={async () => {
+            const ok = await confirm({
+              title: 'DELETE ACCOUNT?',
+              body: 'Your profile goes with it. Your groups keep going without you.',
+              confirmLabel: 'Delete account',
+              danger: true,
+            });
+            if (ok) delMut.mutate();
           }}
           disabled={delMut.isPending}
         >

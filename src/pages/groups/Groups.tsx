@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Plus } from 'lucide-react';
+import { ArrowRight, Plus, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups, useRealtimeGroupsList } from '../../hooks/useGroups';
 import { EmptyState, ErrorState, LoadingRows } from '../../components/common/Feedback';
@@ -37,7 +37,7 @@ export function Groups() {
       ) : groups.length === 0 ? (
         <div style={{ marginTop: 16 }}>
           <EmptyState
-            icon={null}
+            icon={<Users size={30} />}
             title="You haven't found your people yet."
             body="Start your own barkada or join one with a code."
             action={

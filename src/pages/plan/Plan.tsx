@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
+import { CalendarX, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups, useRealtimeGroup } from '../../hooks/useGroups';
 import { FULL_DAY, useGroupAvailability, type DayRange } from '../../hooks/useAvailability';
@@ -110,7 +111,7 @@ export function Plan() {
         <h1 className="display lg">NO CREW YET.</h1>
         <div style={{ height: 16 }} />
         <EmptyState
-          icon={null}
+          icon={<Users size={30} />}
           title="You haven't found your people yet."
           body="Create or join a group to start planning."
           action={
@@ -347,7 +348,7 @@ export function Plan() {
       ) : (
         <div className="sec">
           <EmptyState
-            icon={null}
+            icon={<CalendarX size={30} />}
             title="No one's marked their schedule yet."
             body={`Nudge ${group?.name} to set availability for this date.`}
             action={

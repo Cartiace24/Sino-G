@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, ImagePlus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { profilesService } from '../../services/profiles.service';
@@ -7,11 +7,16 @@ import { storageService } from '../../services/storage.service';
 import { friendlyError } from '../../utils/errors';
 import { useToast } from '../../components/common/Toast';
 import { Button } from '../../components/ui/button';
+import { OnboardingProgress } from '../../components/common/OnboardingProgress';
 import { FieldError, Input, Label } from '../../components/ui/input';
 
 export function OnboardingProfile() {
   const { user, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  // Preserve an invite ?code= across the profile step so the group screen
+  // can still prefill the join form after this page unmounts.
+  const codeQs = params.get('code') ? `?code=${encodeURIComponent(params.get('code')!)}` : '';
   const toast = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const previewUrl = useRef<string | null>(null);
@@ -94,7 +99,7 @@ export function OnboardingProfile() {
       });
       await refreshProfile();
       toast('<b>You\'re in.</b> Now find your people.');
-      navigate('/onboarding/group', { replace: true });
+      navigate(`/onboarding/group${codeQs}`, { replace: true });
     } catch (err) {
       setError(friendlyError(err, 'Could not save your profile.'));
     } finally {
@@ -104,8 +109,8 @@ export function OnboardingProfile() {
 
   return (
     <div className="auth-wrap">
-      <p className="kicker">STEP 1 OF 2</p>
-      <h1 className="display lg">
+      <OnboardingProgress step={1} />
+      <h1 className="display lg" style={{ marginTop: 12 }}>
         ALMOST
         <br />
         THERE.

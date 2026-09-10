@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Copy, ImagePlus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Copy, ImagePlus, Settings2, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGroup, useMyGroups, useRealtimeGroup } from '../../hooks/useGroups';
 import { todayISO } from '../../hooks/useAvailability';
@@ -11,6 +11,7 @@ import { friendlyError } from '../../utils/errors';
 import { qk } from '../../lib/queryClient';
 import { EmptyState, LoadingRows } from '../../components/common/Feedback';
 import { useToast } from '../../components/common/Toast';
+import { useConfirm } from '../../components/common/ConfirmSheet';
 import { Button } from '../../components/ui/button';
 import { FieldError, Input, Label } from '../../components/ui/input';
 import type { GroupInviteRow } from '../../types/database.types';
@@ -30,6 +31,7 @@ export function GroupSettings() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
+  const confirm = useConfirm();
   const qc = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
   const previewUrl = useRef<string | null>(null);
@@ -191,10 +193,14 @@ export function GroupSettings() {
     onError: (err) => toast(friendlyError(err, 'Could not revoke that invite.')),
   });
 
-  const onRevoke = (code: string, inviteId: string) => {
-    if (window.confirm(`Revoke invite ${code}?\n\nAnyone holding it will no longer be able to join.`)) {
-      revokeMut.mutate(inviteId);
-    }
+  const onRevoke = async (code: string, inviteId: string) => {
+    const ok = await confirm({
+      title: `REVOKE ${code}?`,
+      body: 'Anyone holding it will no longer be able to join.',
+      confirmLabel: 'Revoke invite',
+      danger: true,
+    });
+    if (ok) revokeMut.mutate(inviteId);
   };
 
   const copyText = async (label: string, text: string) => {
@@ -221,7 +227,7 @@ export function GroupSettings() {
     return (
       <div style={{ paddingTop: 30 }}>
         <EmptyState
-          icon={null}
+          icon={<Settings2 size={30} />}
           title="Can't open these settings."
           body="You may have been removed, or the link is wrong."
           action={
@@ -311,8 +317,14 @@ export function GroupSettings() {
                   size="sm"
                   style={{ color: 'var(--busy)' }}
                   disabled={clearAvatarMut.isPending}
-                  onClick={() => {
-                    if (window.confirm('Remove the group photo?')) clearAvatarMut.mutate();
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: 'REMOVE PHOTO?',
+                      body: 'The group will go back to its initials tile.',
+                      confirmLabel: 'Remove',
+                      danger: true,
+                    });
+                    if (ok) clearAvatarMut.mutate();
                   }}
                 >
                   <Trash2 size={15} /> Remove
@@ -478,10 +490,14 @@ export function GroupSettings() {
             size="block"
             style={{ color: 'var(--busy)' }}
             disabled={deleteMut.isPending}
-            onClick={() => {
-              if (window.confirm(`Delete ${group.name} for everyone? This can't be undone.`)) {
-                deleteMut.mutate();
-              }
+            onClick={async () => {
+              const ok = await confirm({
+                title: `DELETE ${group.name.toUpperCase().slice(0, 20)}?`,
+                body: 'Memberships, invites, and related data go with it. This can’t be undone.',
+                confirmLabel: 'Delete group',
+                danger: true,
+              });
+              if (ok) deleteMut.mutate();
             }}
           >
             <Trash2 size={16} /> {deleteMut.isPending ? 'Deleting…' : 'Delete group'}

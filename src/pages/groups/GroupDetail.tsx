@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Link2, MessageCircle, MoreHorizontal, Settings2, UserPlus } from 'lucide-react';
+import { ArrowLeft, Link2, MessageCircle, MoreHorizontal, Settings2, UserPlus, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGroup, useGroupMembers, useMyGroups, useRealtimeGroup } from '../../hooks/useGroups';
 import { useUnreadChatGroups } from '../../hooks/useNotifications';
@@ -16,6 +16,7 @@ import { Avatar } from '../../components/common/Avatar';
 import { StatusDot } from '../../components/common/StatusDot';
 import { EmptyState, LoadingRows } from '../../components/common/Feedback';
 import { useToast } from '../../components/common/Toast';
+import { useConfirm } from '../../components/common/ConfirmSheet';
 import { Button } from '../../components/ui/button';
 import type { AvailabilityStatus, MemberRole } from '../../types/database.types';
 
@@ -24,6 +25,7 @@ export function GroupDetail() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
+  const confirm = useConfirm();
   const qc = useQueryClient();
   const [copied, setCopied] = useState(false);
 
@@ -79,11 +81,14 @@ export function GroupDetail() {
     onError: (err) => toast(friendlyError(err, 'Could not leave the group.')),
   });
 
-  const onLeave = () => {
+  const onLeave = async () => {
     if (!group) return;
-    const ok = window.confirm(
-      `Leave ${group.name}?\n\nYou will lose access to this group, its availability, and future hangouts.`,
-    );
+    const ok = await confirm({
+      title: `LEAVE ${group.name.toUpperCase().slice(0, 24)}?`,
+      body: 'You will lose access to this group, its availability, and future hangouts.',
+      confirmLabel: 'Leave group',
+      danger: true,
+    });
     if (ok) leaveMut.mutate();
   };
 
@@ -97,11 +102,14 @@ export function GroupDetail() {
     onError: (err) => toast(friendlyError(err, 'Could not remove that member.')),
   });
 
-  const onRemove = (displayName: string, targetUserId: string) => {
+  const onRemove = async (displayName: string, targetUserId: string) => {
     if (!group) return;
-    const ok = window.confirm(
-      `Remove ${displayName} from ${group.name}?\n\n${displayName} will lose access to this group and its future activity.`,
-    );
+    const ok = await confirm({
+      title: `REMOVE ${displayName.toUpperCase().slice(0, 20)}?`,
+      body: `${displayName} will lose access to ${group.name} and its future activity.`,
+      confirmLabel: 'Remove',
+      danger: true,
+    });
     if (ok) removeMut.mutate(targetUserId);
   };
 
@@ -116,12 +124,21 @@ export function GroupDetail() {
     onError: (err) => toast(friendlyError(err, 'Could not change that role.')),
   });
 
-  const onRoleChange = (displayName: string, targetUserId: string, role: MemberRole) => {
+  const onRoleChange = async (displayName: string, targetUserId: string, role: MemberRole) => {
     if (!group) return;
-    const ok =
+    const ok = await confirm(
       role === 'admin'
-        ? window.confirm(`Make ${displayName} an admin of ${group.name}?\n\nAdmins can manage members and hangouts.`)
-        : window.confirm(`Remove ${displayName} as admin?\n\nThey will become a regular member.`);
+        ? {
+            title: `MAKE ${displayName.toUpperCase().slice(0, 20)} ADMIN?`,
+            body: 'Admins can manage members and hangouts.',
+            confirmLabel: 'Make admin',
+          }
+        : {
+            title: 'REMOVE AS ADMIN?',
+            body: `${displayName} will become a regular member.`,
+            confirmLabel: 'Remove admin',
+          },
+    );
     if (ok) roleMut.mutate({ targetUserId, role });
   };
 
@@ -192,7 +209,7 @@ export function GroupDetail() {
     return (
       <div style={{ paddingTop: 30 }}>
         <EmptyState
-          icon={null}
+          icon={<Users size={30} />}
           title="Can't open this group."
           body="You may have been removed, or the link is wrong."
           action={

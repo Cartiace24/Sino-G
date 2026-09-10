@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Moon, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups, useRealtimeGroupsList } from '../../hooks/useGroups';
 import { todayISO, useTonight } from '../../hooks/useAvailability';
@@ -38,35 +38,65 @@ export function Today() {
 
   const firstName = profile?.display_name?.split(' ')[0]?.toUpperCase() ?? 'FRIEND';
 
-  // Best upcoming window across the first group, next 3 days.
+  // Best upcoming window per group (top 3 groups, next 3 days), ranked by
+  // true score — the old groups[0]-only hero hid every other barkada.
   const bestQ = useQuery({
-    queryKey: [...qk.bestUpcoming(), groups[0]?.id ?? 'none', today],
+    queryKey: [...qk.bestUpcoming(), [...groupIds].sort().slice(0, 3).join(','), today],
     queryFn: async () => {
-      const gid = groups[0]!.id;
-      const members = await groupsService.members(gid);
-      const ids = members.map((m) => m.user_id);
-      const dates = [todayISO(0), todayISO(1), todayISO(2)];
-      const perDay = await Promise.all(
-        dates.map(async (d) => ({
-          date: d,
-          rows: await availabilityService.listForDate(ids, d),
-        })),
+      const targets = groups.slice(0, 3);
+      const perGroup = await Promise.all(
+        targets.map(async (g) => {
+          const members = await groupsService.members(g.id);
+          const ids = members.map((m) => m.user_id);
+          if (ids.length === 0) return null;
+          const dates = [todayISO(0), todayISO(1), todayISO(2)];
+          const perDay = await Promise.all(
+            dates.map(async (d) => ({
+              date: d,
+              rows: await availabilityService.listForDate(ids, d),
+            })),
+          );
+          let best: {
+            groupId: string;
+            groupName: string;
+            date: string;
+            label: string;
+            window: string;
+            free: number;
+            total: number;
+            score: number;
+          } | null = null;
+          for (const { date, rows } of perDay) {
+            const slots = calculateGroupAvailability(ids, rows);
+            const found = findBestSlot(slots);
+            // Compare true scores: free count alone ignores maybe-points and can
+            // crown a lower-scoring day.
+            if (found && (!best || found.slot.score > best.score)) {
+              best = {
+                groupId: g.id,
+                groupName: g.name,
+                date,
+                label: found.slot.label,
+                window: found.window.label,
+                free: found.slot.free,
+                total: ids.length,
+                score: found.slot.score,
+              };
+            }
+          }
+          return best;
+        }),
       );
-      let best: { date: string; label: string; window: string; free: number; total: number; score: number } | null = null;
-      for (const { date, rows } of perDay) {
-        const slots = calculateGroupAvailability(ids, rows);
-        const found = findBestSlot(slots);
-        // Compare true scores: free count alone ignores maybe-points and can
-        // crown a lower-scoring day.
-        if (found && (!best || found.slot.score > best.score)) {
-          best = { date, label: found.slot.label, window: found.window.label, free: found.slot.free, total: ids.length, score: found.slot.score };
-        }
-      }
-      return best;
+      return perGroup
+        .filter((b): b is NonNullable<typeof b> => b != null)
+        .sort((a, b) => b.score - a.score || b.free - a.free)
+        .slice(0, 3);
     },
     enabled: groups.length > 0,
     staleTime: 60_000,
   });
+  const bestList = bestQ.data ?? [];
+  const topBest = bestList[0] ?? null;
 
   if (groupsQ.isLoading) return <LoadingRows rows={6} />;
   if (groupsQ.isError) {
@@ -99,7 +129,7 @@ export function Today() {
         </h1>
         <div style={{ height: 18 }} />
         <EmptyState
-          icon={null}
+          icon={<Users size={30} />}
           title="You haven't found your people yet."
           body="Start your own barkada or join one with a code."
           action={
@@ -182,7 +212,10 @@ export function Today() {
             </div>
           )}
           <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
-            <button className="btn btn-line btn-sm" onClick={() => navigate(`/groups/${groups[0].id}`)}>
+            <button
+              className="btn btn-line btn-sm"
+              onClick={() => navigate(`/groups/${topBest?.groupId ?? groups[0].id}`)}
+            >
               See who&apos;s free <ArrowRight size={16} />
             </button>
             <button className="btn btn-paper btn-sm" onClick={() => navigate('/availability')}>
@@ -203,23 +236,48 @@ export function Today() {
                   </button>
                 </div>
               </>
-            ) : bestQ.data ? (
+            ) : topBest ? (
               <>
                 <h3>
-                  {bestQ.data.date === today ? 'Today' : bestQ.data.date} looks good.
+                  {topBest.date === today ? 'Today' : topBest.date} looks good.
                 </h3>
+                <p className="small" style={{ color: 'var(--green)', fontWeight: 700, letterSpacing: '.08em' }}>
+                  {topBest.groupName.toUpperCase()}
+                </p>
                 <div className="row-between" style={{ marginTop: 10 }}>
                   <div>
                     <div className="bign">
-                      {bestQ.data.free}
-                      <span style={{ fontSize: 22 }}>/{bestQ.data.total}</span>
+                      {topBest.free}
+                      <span style={{ fontSize: 22 }}>/{topBest.total}</span>
                     </div>
-                    <p>{bestQ.data.window} · {bestQ.data.free} free</p>
+                    <p>{topBest.window} · {topBest.free} free</p>
                   </div>
-                  <button className="btn btn-green btn-sm" onClick={() => navigate(`/groups/${groups[0].id}/availability`)}>
+                  <button className="btn btn-green btn-sm" onClick={() => navigate(`/groups/${topBest.groupId}/availability`)}>
                     View plan <ArrowUpRight size={15} />
                   </button>
                 </div>
+                {bestList.length > 1 && (
+                  <div className="rows" style={{ marginTop: 14, borderTop: '1px solid rgba(255,255,255,.14)' }}>
+                    {bestList.slice(1).map((b) => (
+                      <button
+                        key={b.groupId}
+                        className="member-row"
+                        style={{ borderBottom: '1px solid rgba(255,255,255,.14)', padding: '10px 2px' }}
+                        onClick={() => navigate(`/groups/${b.groupId}/availability`)}
+                      >
+                        <span className="who">
+                          <strong style={{ color: '#fff', fontSize: 14 }}>{b.groupName}</strong>
+                          <small style={{ color: '#cfccc2' }}>
+                            {b.date === today ? 'Today' : b.date} · {b.window} · {b.free}/{b.total} free
+                          </small>
+                        </span>
+                        <span className="right">
+                          <ArrowUpRight size={16} style={{ color: 'var(--green)' }} />
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </>
             ) : (
               <>
@@ -284,7 +342,7 @@ export function Today() {
       ) : hangouts.length === 0 ? (
         <div style={{ marginTop: 10 }}>
           <EmptyState
-            icon={null}
+            icon={<Moon size={30} />}
             title="Nothing's happening right now."
             body="Be the one to start something."
             action={

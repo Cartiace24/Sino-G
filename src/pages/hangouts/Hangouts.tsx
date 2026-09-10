@@ -98,6 +98,7 @@ export function Hangouts() {
   useRealtimeHangouts(groupIds);
 
   const [showForm, setShowForm] = useState(params.has('group'));
+  const [step, setStep] = useState(1);
   const [groupId, setGroupId] = useState(params.get('group') ?? '');
   const [what, setWhat] = useState('');
   const [where, setWhere] = useState('');
@@ -197,20 +198,53 @@ export function Hangouts() {
       <p className="lede" style={{ marginTop: 8 }}>
         See who&apos;s ready to hang out. No planning thread needed.
       </p>
-      <Button variant="dark" size="bigBlock" onClick={() => setShowForm((s) => !s)} style={{ marginTop: 16 }}>
+      <Button
+        variant="dark"
+        size="bigBlock"
+        onClick={() => {
+          setShowForm((s) => !s);
+          setStep(1);
+          setError(null);
+        }}
+        style={{ marginTop: 16 }}
+      >
         + Start a hangout
       </Button>
 
       {showForm && (
         <>
-          <form className="sheet" onSubmit={onAsk}>
-          <span className="kicker">NEW HANGOUT · ~15 SECONDS</span>
+          <form
+            className="sheet"
+            onSubmit={(e) => {
+              // Steps 1–3 advance; only step 4 submits.
+              if (step < 4) {
+                e.preventDefault();
+                if (step === 1 && !what.trim()) {
+                  setError('What are you planning? Add it first.');
+                  return;
+                }
+                setError(null);
+                setStep(step + 1);
+                return;
+              }
+              onAsk(e);
+            }}
+          >
+          <div className="row-between">
+            <span className="kicker">NEW HANGOUT · STEP {step} OF 4</span>
+            <span className="small muted" aria-hidden>
+              {'●'.repeat(step) + '○'.repeat(4 - step)}
+            </span>
+          </div>
+          {step === 1 && (
           <div className="field" style={{ marginTop: 12 }}>
             <Label htmlFor="what">01 · What are you planning?</Label>
             <Input id="what" placeholder="e.g. Basketball" value={what} onChange={(e) => setWhat(e.target.value)} autoFocus />
           </div>
-          <div className="field">
-            <Label>02 · Group</Label>
+          )}
+          {step === 2 && (
+          <div className="field" style={{ marginTop: 12 }}>
+            <Label>02 · Group{what.trim() ? ` · ${what.trim().slice(0, 24)}` : ''}</Label>
             <div className="chiprow">
               {groups.map((g) => (
                 <button
@@ -224,7 +258,9 @@ export function Hangouts() {
               ))}
             </div>
           </div>
-          <div className="field">
+          )}
+          {step === 3 && (
+          <div className="field" style={{ marginTop: 12 }}>
             <Label>03 · When?</Label>
             <span className="kicker">QUICK PICK</span>
             <div className="chiprow" style={{ marginTop: 8 }}>
@@ -265,7 +301,9 @@ export function Hangouts() {
               Selected: <b>{describeHangoutWhen(whenDate)}</b>
             </p>
           </div>
-          <div className="field">
+          )}
+          {step === 4 && (
+          <div className="field" style={{ marginTop: 12 }}>
             <Label htmlFor="where">04 · Where? (optional)</Label>
             <Input
               id="where"
@@ -283,11 +321,28 @@ export function Hangouts() {
               </button>
               {pin && <span className="small muted">Exact map location saved</span>}
             </div>
+            <p className="small muted" style={{ marginTop: 8 }}>
+              {what.trim() || 'Hangout'} · {describeHangoutWhen(whenDate)}
+            </p>
           </div>
+          )}
           <FieldError message={error} />
-          <Button type="submit" variant="green" size="bigBlock" disabled={createMut.isPending}>
-            {createMut.isPending ? 'Asking…' : (<>Create hangout <ArrowRight size={18} /></>)}
-          </Button>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {step > 1 && (
+              <Button type="button" variant="paper" size="block" onClick={() => { setError(null); setStep(step - 1); }}>
+                Back
+              </Button>
+            )}
+            {step < 4 ? (
+              <Button type="submit" variant="dark" size="block">
+                Next <ArrowRight size={18} />
+              </Button>
+            ) : (
+              <Button type="submit" variant="green" size="block" disabled={createMut.isPending}>
+                {createMut.isPending ? 'Asking…' : (<>Create hangout <ArrowRight size={18} /></>)}
+              </Button>
+            )}
+          </div>
         </form>
         {pickerOpen && (
           <Suspense fallback={<LoadingRows rows={3} />}>

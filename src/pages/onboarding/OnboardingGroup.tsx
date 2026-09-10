@@ -9,6 +9,7 @@ import { normalizeInviteCode } from '../../utils/invite-generator';
 import { useToast } from '../../components/common/Toast';
 import { qk } from '../../lib/queryClient';
 import { Button } from '../../components/ui/button';
+import { OnboardingProgress } from '../../components/common/OnboardingProgress';
 import { FieldError, Input, Label } from '../../components/ui/input';
 
 export function OnboardingGroup() {
@@ -82,8 +83,11 @@ export function OnboardingGroup() {
 
   return (
     <div className="auth-wrap" style={{ maxWidth: 520 }}>
-      <p className="kicker">STEP 2 OF 2</p>
-      <h1 className="display lg">WHAT BRINGS YOU HERE?</h1>
+      <OnboardingProgress
+        step={2}
+        backTo={`/onboarding/profile${code ? `?code=${encodeURIComponent(code)}` : ''}`}
+      />
+      <h1 className="display lg" style={{ marginTop: 12 }}>WHAT BRINGS YOU HERE?</h1>
       <div style={{ height: 18 }} />
 
       {mode === 'choose' && (

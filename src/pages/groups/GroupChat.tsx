@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Send, Trash2 } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Send, Trash2, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGroup, useMyGroups, useRealtimeGroup } from '../../hooks/useGroups';
 import {
@@ -14,6 +14,7 @@ import { CHAT_MAX_LENGTH } from '../../services/chat.service';
 import { timeAgo } from '../../utils/time';
 import { Avatar } from '../../components/common/Avatar';
 import { EmptyState, LoadingRows } from '../../components/common/Feedback';
+import { useConfirm } from '../../components/common/ConfirmSheet';
 import { Button } from '../../components/ui/button';
 import type { MessageWithSender } from '../../types/app.types';
 
@@ -21,6 +22,36 @@ import type { MessageWithSender } from '../../types/app.types';
 function showMeta(prev: MessageWithSender | undefined, cur: MessageWithSender): boolean {
   if (!prev || prev.sender_id !== cur.sender_id) return true;
   return new Date(cur.created_at).getTime() - new Date(prev.created_at).getTime() > 5 * 60_000;
+}
+
+function sameLocalDay(a: string, b: string): boolean {
+  const da = new Date(a);
+  const db = new Date(b);
+  return (
+    da.getFullYear() === db.getFullYear() &&
+    da.getMonth() === db.getMonth() &&
+    da.getDate() === db.getDate()
+  );
+}
+
+function dayDividerLabel(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(now.getDate() - 1);
+  const isToday =
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate();
+  if (isToday) return 'TODAY';
+  const isYesterday =
+    d.getFullYear() === yesterday.getFullYear() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getDate() === yesterday.getDate();
+  if (isYesterday) return 'YESTERDAY';
+  return d
+    .toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+    .toUpperCase();
 }
 
 function scrollToBottom(smooth: boolean): void {
@@ -37,6 +68,7 @@ export function GroupChat() {
   const messagesQ = useGroupMessages(groupId);
   const sendMut = useSendMessage(groupId);
   const deleteMut = useDeleteMessage(groupId);
+  const confirm = useConfirm();
   useRealtimeGroupChat(groupId);
   // Membership loss / group deletion degrades to the can't-open state below.
   useRealtimeGroup(groupId);
@@ -54,6 +86,15 @@ export function GroupChat() {
 
   const [draft, setDraft] = useState('');
   const loadedOnce = useRef(false);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // Autogrow to ~4 rows, then scroll internally.
+  useEffect(() => {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 124)}px`;
+  }, [draft]);
 
   const group = groupQ.data;
   const memberCount = myGroupsQ.data?.find((g) => g.id === groupId)?.member_count;
@@ -107,8 +148,13 @@ export function GroupChat() {
     }
   };
 
-  const onDelete = (m: MessageWithSender) => {
-    const ok = window.confirm('Delete this message?\n\nThis can\'t be undone.');
+  const onDelete = async (m: MessageWithSender) => {
+    const ok = await confirm({
+      title: 'DELETE MESSAGE?',
+      body: 'This can’t be undone.',
+      confirmLabel: 'Delete',
+      danger: true,
+    });
     if (ok) deleteMut.mutate(m.id);
   };
 
@@ -117,7 +163,7 @@ export function GroupChat() {
     return (
       <div style={{ paddingTop: 30 }}>
         <EmptyState
-          icon={null}
+          icon={<Users size={30} />}
           title="Can't open this group."
           body="You may have been removed, or the link is wrong."
           action={
@@ -147,7 +193,7 @@ export function GroupChat() {
           <LoadingRows rows={4} />
         ) : messagesQ.isError ? (
           <EmptyState
-            icon={null}
+            icon={<MessageCircle size={30} />}
             title="Couldn't load messages."
             body="Check your connection and try again."
             action={
@@ -158,7 +204,7 @@ export function GroupChat() {
           />
         ) : items.length === 0 ? (
           <div style={{ marginTop: 10 }}>
-            <EmptyState icon={null} title="NO MESSAGES YET." body="Start the conversation." />
+            <EmptyState icon={<MessageCircle size={30} />} title="NO MESSAGES YET." body="Start the conversation." />
           </div>
         ) : (
           <>
@@ -177,9 +223,18 @@ export function GroupChat() {
             <div className="rows" style={{ marginTop: 8 }}>
               {items.map((m, i) => {
                 const meta = showMeta(items[i - 1], m);
+                const newDay = i === 0 || !sameLocalDay(items[i - 1].created_at, m.created_at);
                 const mine = m.sender_id === user?.id;
                 return (
-                  <div className="member-row" key={m.id} style={{ alignItems: 'flex-start' }}>
+                  <div key={m.id}>
+                    {newDay && (
+                      <div style={{ textAlign: 'center', margin: '10px 0 2px' }}>
+                        <span className="kicker" style={{ background: 'var(--bg-deep)', borderRadius: 999, padding: '4px 12px' }}>
+                          {dayDividerLabel(m.created_at)}
+                        </span>
+                      </div>
+                    )}
+                  <div className="member-row" style={{ alignItems: 'flex-start' }}>
                     {meta ? (
                       <Avatar name={m.sender?.display_name ?? '?'} src={m.sender?.avatar_url} size="sm" />
                     ) : (
@@ -213,6 +268,7 @@ export function GroupChat() {
                       )}
                     </span>
                   </div>
+                  </div>
                 );
               })}
             </div>
@@ -232,6 +288,7 @@ export function GroupChat() {
       >
         <div className="field" style={{ marginBottom: 8 }}>
           <textarea
+            ref={taRef}
             className="input"
             rows={1}
             value={draft}
@@ -240,7 +297,7 @@ export function GroupChat() {
             placeholder="Message the group..."
             maxLength={CHAT_MAX_LENGTH + 1}
             aria-label="Message the group"
-            style={{ resize: 'none' }}
+            style={{ resize: 'none', overflowY: 'auto', maxHeight: 124 }}
           />
         </div>
         <div className="row-between">

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Pencil, Trash2 } from 'lucide-react';
+import { CalendarX, Pencil, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyAvailability } from '../../hooks/useAvailability';
 import { longDateLabel, nextDays, todayISO } from '../../utils/dates';
@@ -212,7 +212,7 @@ export function Availability() {
         <LoadingRows rows={3} />
       ) : upcoming.length === 0 ? (
         <div style={{ marginTop: 10 }}>
-          <EmptyState icon={null} title="Nothing marked yet." body="Add your first window above — 20 seconds." />
+          <EmptyState icon={<CalendarX size={30} />} title="Nothing marked yet." body="Add your first window above — 20 seconds." />
         </div>
       ) : (
         <div className="rows" style={{ marginTop: 8 }}>

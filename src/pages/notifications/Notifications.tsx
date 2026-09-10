@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Check, ChevronRight } from 'lucide-react';
+import { Bell, BellOff, Check, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   useClearNotifications,
@@ -12,6 +12,7 @@ import { friendlyError } from '../../utils/errors';
 import { timeAgo } from '../../utils/time';
 import { Avatar } from '../../components/common/Avatar';
 import { EmptyState, LoadingRows } from '../../components/common/Feedback';
+import { useConfirm } from '../../components/common/ConfirmSheet';
 import { Button } from '../../components/ui/button';
 import type { NotificationWithActor } from '../../types/app.types';
 
@@ -47,6 +48,7 @@ export function NotificationsPage() {
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
   const clearAll = useClearNotifications();
+  const confirm = useConfirm();
 
   const items = listQ.data ?? [];
   const unread = unreadQ.data ?? 0;
@@ -57,10 +59,14 @@ export function NotificationsPage() {
     navigate(notificationTarget(n));
   };
 
-  const onClear = () => {
-    if (window.confirm('Remove all notifications?\n\nThis can\'t be undone. New activity will still notify you.')) {
-      clearAll.mutate();
-    }
+  const onClear = async () => {
+    const ok = await confirm({
+      title: 'CLEAR INBOX?',
+      body: "This can't be undone. New activity will still notify you.",
+      confirmLabel: 'Clear all',
+      danger: true,
+    });
+    if (ok) clearAll.mutate();
   };
 
   return (
@@ -98,7 +104,7 @@ export function NotificationsPage() {
       ) : listQ.isError ? (
         <div style={{ marginTop: 16 }}>
           <EmptyState
-            icon={null}
+            icon={<Bell size={30} />}
             title="Couldn't load notifications."
             body={friendlyError(listQ.error, 'Try again in a bit.')}
             action={
@@ -111,7 +117,7 @@ export function NotificationsPage() {
       ) : items.length === 0 ? (
         <div style={{ marginTop: 16 }}>
           <EmptyState
-            icon={null}
+            icon={<BellOff size={30} />}
             title="No notifications yet."
             body="When the barkada moves — joins, hangouts, responses — you'll see it here."
           />
