@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, Clock, Sun, User, Zap } from 'lucide-react';
+import { CalendarDays, Clock, MessageCircle, Sun, User, Zap } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups } from '../../hooks/useGroups';
 import { useRealtimeNotifications, useUnreadChatGroups } from '../../hooks/useNotifications';
@@ -18,8 +18,6 @@ export function AppShell() {
   const { profile, user } = useAuth();
   const { data: myGroups } = useMyGroups(user?.id);
   const unreadChat = useUnreadChatGroups(user?.id);
-  const chatGroups = (myGroups ?? []).slice(0, 4);
-  const extraChats = (myGroups ?? []).length - chatGroups.length;
   const groupRows = (myGroups ?? []).slice(0, 4);
   const extraGroups = (myGroups ?? []).length - groupRows.length;
   // Single app-wide inbox subscription (self-guards when logged out).
@@ -70,44 +68,34 @@ export function AppShell() {
         {groupRows.length > 0 && (
           <nav className="side-chats" aria-label="Your groups">
             <span className="side-chats-kicker">GROUPS</span>
-            {groupRows.map((g) => (
-              <NavLink
-                key={g.id}
-                to={`/groups/${g.id}`}
-                className={({ isActive }) => cn('side-chat', isActive && 'active')}
-              >
-                <span className="mini-avatar" aria-hidden>
-                  {g.name.trim()[0]?.toUpperCase() ?? '?'}
-                </span>
-                <span className="name">{g.name}</span>
-              </NavLink>
-            ))}
+            {groupRows.map((g) => {
+              const chatActive = pathname === `/groups/${g.id}/chat`;
+              return (
+                <div className="side-chat" key={g.id}>
+                  <NavLink
+                    to={`/groups/${g.id}`}
+                    end
+                    className={({ isActive }) => cn('side-chat-main', isActive && 'active')}
+                  >
+                    <span className="mini-avatar" aria-hidden>
+                      {g.name.trim()[0]?.toUpperCase() ?? '?'}
+                    </span>
+                    <span className="name">{g.name}</span>
+                  </NavLink>
+                  <button
+                    className={cn('side-chat-go', chatActive && 'active')}
+                    aria-label={unreadChat.has(g.id) ? `Open ${g.name} chat, unread messages` : `Open ${g.name} chat`}
+                    onClick={() => navigate(`/groups/${g.id}/chat`)}
+                  >
+                    <MessageCircle size={15} />
+                    {unreadChat.has(g.id) && <span className="dot free" aria-hidden />}
+                  </button>
+                </div>
+              );
+            })}
             {extraGroups > 0 && (
               <Link className="small muted" to="/groups" style={{ padding: '4px 12px' }}>
                 +{extraGroups} more
-              </Link>
-            )}
-          </nav>
-        )}
-        {chatGroups.length > 0 && (
-          <nav className="side-chats" aria-label="Group chats">
-            <span className="side-chats-kicker">CHATS</span>
-            {chatGroups.map((g) => (
-              <NavLink
-                key={g.id}
-                to={`/groups/${g.id}/chat`}
-                className={({ isActive }) => cn('side-chat', isActive && 'active')}
-              >
-                <span className="mini-avatar" aria-hidden>
-                  {g.name.trim()[0]?.toUpperCase() ?? '?'}
-                </span>
-                <span className="name">{g.name}</span>
-                {unreadChat.has(g.id) && <span className="dot free" role="img" aria-label="Unread messages" />}
-              </NavLink>
-            ))}
-            {extraChats > 0 && (
-              <Link className="small muted" to="/groups" style={{ padding: '4px 12px' }}>
-                +{extraChats} more
               </Link>
             )}
           </nav>
