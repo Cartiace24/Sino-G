@@ -1,20 +1,30 @@
 import { useNavigate } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { Bell, BellOff } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useUnreadCount } from '../../hooks/useNotifications';
+import { PREF_KEYS, usePreference } from '../../lib/preferences';
 
 /** Bell with a subtle unread badge. Same icon language as the tab bar. */
 export function NotificationBell() {
   const { user } = useAuth();
   const { data: unread = 0 } = useUnreadCount(user?.id);
+  const [notifEnabled] = usePreference(PREF_KEYS.notif, true);
   const navigate = useNavigate();
 
-  const label = unread <= 9 ? String(unread) : unread < 99 ? '10+' : '99+';
+  const showBadge = notifEnabled && unread > 0;
+  const label = !notifEnabled
+    ? 'Notifications paused (enable in Settings)'
+    : unread <= 0
+      ? 'Notifications'
+      : `${unread <= 9 ? String(unread) : unread < 99 ? '10+' : '99+'} unread notifications`;
+
+  const badge = unread <= 9 ? String(unread) : unread < 99 ? '10+' : '99+';
 
   return (
     <button
       onClick={() => navigate('/notifications')}
-      aria-label={unread > 0 ? `${label} unread notifications` : 'Notifications'}
+      aria-label={label}
+      title={label}
       style={{
         position: 'relative',
         width: 38,
@@ -24,10 +34,11 @@ export function NotificationBell() {
         borderRadius: 10,
         color: 'var(--ink)',
         flexShrink: 0,
+        opacity: notifEnabled ? 1 : 0.45,
       }}
     >
-      <Bell size={20} />
-      {unread > 0 && (
+      {notifEnabled ? <Bell size={20} /> : <BellOff size={20} />}
+      {showBadge && (
         <b
           aria-hidden
           style={{
@@ -47,7 +58,7 @@ export function NotificationBell() {
             letterSpacing: '.02em',
           }}
         >
-          {label}
+          {badge}
         </b>
       )}
     </button>

@@ -15,6 +15,7 @@ const LocationPicker = lazy(() =>
   import('../../components/hangouts/LocationPicker').then((m) => ({ default: m.LocationPicker })),
 );
 import { qk } from '../../lib/queryClient';
+import { PREF_KEYS, usePreference } from '../../lib/preferences';
 import { Avatar } from '../../components/common/Avatar';
 import { EmptyState, LoadingRows } from '../../components/common/Feedback';
 import { useToast } from '../../components/common/Toast';
@@ -107,24 +108,13 @@ export function Hangouts() {
   // read/write this — there is no separate label state to drift.
   const [whenDate, setWhenDate] = useState<Date>(() => initialWhen(params.get('when')));
   const [error, setError] = useState<string | null>(null);
+  // Hangout alerts toggle mutes celebratory toasts (errors still surface).
+  const [alertsOn] = usePreference(PREF_KEYS.alerts, true);
 
-  // Per-group live counts (one query for the visible list)
+  // Per-group live counts (one batched query for the visible list, not N).
   const countsQ = useQuery({
     queryKey: ['hangout-counts', (hangoutsQ.data ?? []).map((h) => h.id).join(',')],
-    queryFn: async () => {
-      const map = new Map<string, number>();
-      await Promise.all(
-        (hangoutsQ.data ?? []).map(async (h) => {
-          const r = await hangoutsService.responses(h.id);
-          const downs = r.filter((x) => x.response === 'down');
-          // The creator counts as down exactly once: the +1 applies only when
-          // they have no explicit 'down' row (they may respond like anyone).
-          const creatorDown = downs.some((x) => x.user_id === h.created_by);
-          map.set(h.id, downs.length + (creatorDown ? 0 : 1));
-        }),
-      );
-      return map;
-    },
+    queryFn: () => hangoutsService.countDownsFor(hangoutsQ.data ?? []),
     enabled: (hangoutsQ.data?.length ?? 0) > 0,
     staleTime: 10_000,
   });
@@ -149,7 +139,7 @@ export function Hangouts() {
       setWhere('');
       setPin(null);
       setShowForm(false);
-      toast('<b>Asked!</b> The group has been pinged.');
+      if (alertsOn) toast('<b>Asked!</b> The group has been pinged.');
       navigate(`/g/${h.id}`);
     },
     onError: (err) => setError(friendlyError(err, 'Could not ask the group.')),

@@ -120,6 +120,41 @@ export const hangoutsService = {
     return (data ?? []) as unknown as ResponseWithProfile[];
   },
 
+  /**
+   * Batched down-counts for a list of hangouts (1 query, not N).
+   * The creator counts as down exactly once: the +1 applies only when
+   * they have no explicit 'down' row (they may respond like anyone).
+   */
+  async countDownsFor(
+    hangouts: { id: string; created_by: string | null }[],
+  ): Promise<Map<string, number>> {
+    const map = new Map<string, number>();
+    for (const h of hangouts) map.set(h.id, 1); // creator baseline
+    if (hangouts.length === 0) return map;
+    const ids = hangouts.map((h) => h.id);
+    const { data, error } = await supabase
+      .from('hangout_responses')
+      .select('hangout_request_id,user_id,response')
+      .in('hangout_request_id', ids);
+    if (error) throw error;
+    const rows = (data ?? []) as { hangout_request_id: string; user_id: string; response: string }[];
+    const byHangout = new Map<string, { downs: number; creatorDown: boolean }>();
+    const creatorById = new Map(hangouts.map((h) => [h.id, h.created_by]));
+    for (const r of rows) {
+      if (r.response !== 'down') continue;
+      const entry = byHangout.get(r.hangout_request_id) ?? { downs: 0, creatorDown: false };
+      entry.downs += 1;
+      if (r.user_id === creatorById.get(r.hangout_request_id)) entry.creatorDown = true;
+      byHangout.set(r.hangout_request_id, entry);
+    }
+    for (const h of hangouts) {
+      const entry = byHangout.get(h.id);
+      if (!entry) continue; // no downs: keep creator baseline of 1
+      map.set(h.id, entry.downs + (entry.creatorDown ? 0 : 1));
+    }
+    return map;
+  },
+
   /** Upsert: one row per user per hangout — changing minds updates the row. */
   async respond(hangoutId: string, userId: string, response: HangoutResponseValue): Promise<void> {
     const { error } = await supabase.from('hangout_responses').upsert(

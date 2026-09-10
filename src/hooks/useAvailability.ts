@@ -9,20 +9,9 @@ import {
   summarizeTonight,
 } from '../utils/availability-calculator';
 
-/** Local YYYY-MM-DD. Never use toISOString() for calendar dates: UTC can be a
- *  different day than the user's wall clock (e.g. after midnight in UTC+8). */
-export function localISODate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
-
-export function todayISO(offsetDays = 0): string {
-  const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
-  return localISODate(d);
-}
+// Canonical date helpers live in utils/dates — re-exported here so existing
+// `from '../../hooks/useAvailability'` imports keep working.
+export { localISODate, todayISO } from '../utils/dates';
 
 export function useMyAvailability(userId: string | undefined, from: string, to: string) {
   return useQuery({

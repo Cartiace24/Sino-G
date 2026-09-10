@@ -2,7 +2,13 @@ import { useMemo, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { localISODate, todayISO, useMyAvailability } from '../../hooks/useAvailability';
+import { useMyAvailability } from '../../hooks/useAvailability';
+import { longDateLabel, nextDays, todayISO } from '../../utils/dates';
+import {
+  CalendarPopup,
+  CalendarToggleButton,
+  useCalendarDropdown,
+} from '../../components/common/CalendarDropdown';
 import { availabilityService, validateAvailabilityInput } from '../../services/availability.service';
 import { friendlyError } from '../../utils/errors';
 import { formatTimeInputToLabel } from '../../utils/availability-calculator';
@@ -13,19 +19,6 @@ import { useToast } from '../../components/common/Toast';
 import { Button } from '../../components/ui/button';
 import { FieldError, Input, Label } from '../../components/ui/input';
 import type { AvailabilityStatus } from '../../types/database.types';
-
-function nextDays(n: number): { iso: string; dow: string; num: string; label: string }[] {
-  return Array.from({ length: n }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    return {
-      iso: localISODate(d),
-      dow: d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
-      num: String(d.getDate()),
-      label: d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase(),
-    };
-  });
-}
 
 const STATUS_META: { value: AvailabilityStatus; hint: string }[] = [
   { value: 'free', hint: "I'm in" },
@@ -51,7 +44,10 @@ export function Availability() {
   const toISO = todayISO(30);
   const mineQ = useMyAvailability(user?.id, fromISO, toISO);
   const mine = mineQ.data ?? [];
-  const dayLabel = days.find((d) => d.iso === date)?.label ?? date;
+  const todayIso = todayISO();
+  const cal = useCalendarDropdown(date);
+  const isCustomDate = !days.some((d) => d.iso === date);
+  const dayLabel = days.find((d) => d.iso === date)?.label ?? longDateLabel(date);
 
   const invalidate = () => {
     if (!user) return;
@@ -144,12 +140,28 @@ export function Availability() {
           );
         })}
       </div>
-      <div className="daytabs">
-        {days.slice(7).map((d) => (
-          <button key={d.iso} className={`daytab${d.iso === date ? ' sel' : ''}`} onClick={() => setDate(d.iso)}>
-            {d.dow} {d.num}
-          </button>
-        ))}
+      <div className="cal-anchor" ref={cal.ref}>
+        <div className="daytabs">
+          {days.slice(7).map((d) => (
+            <button key={d.iso} className={`daytab${d.iso === date ? ' sel' : ''}`} onClick={() => setDate(d.iso)}>
+              {d.dow} {d.num}
+            </button>
+          ))}
+          <CalendarToggleButton value={date} active={isCustomDate} open={cal.open} onClick={cal.openToggle} />
+        </div>
+        {cal.open && (
+          <CalendarPopup
+            value={date}
+            min={todayIso}
+            cursor={cal.cursor}
+            cells={cal.cells}
+            onStep={cal.stepMonth}
+            onPick={(iso) => {
+              setDate(iso);
+              cal.setOpen(false);
+            }}
+          />
+        )}
       </div>
 
       <hr className="rule" />

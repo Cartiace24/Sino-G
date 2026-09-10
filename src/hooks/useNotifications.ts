@@ -7,6 +7,7 @@ import { notificationsService } from '../services/notifications.service';
 import { friendlyError } from '../utils/errors';
 import { useToast } from '../components/common/Toast';
 import { useAuth } from '../contexts/AuthContext';
+import { PREF_KEYS, getPreference, usePreference } from '../lib/preferences';
 import type { NotificationWithActor } from '../types/app.types';
 
 export function useNotifications(userId: string | undefined) {
@@ -165,14 +166,20 @@ export function useMarkGroupChatRead() {
  * another device) both refetch the inbox + badge. Resubscribes (reconnects)
  * refetch once for freshness. Always cleaned up on logout/unmount/user
  * change — exactly one channel while authed.
+ *
+ * Respects the device Notifications toggle (sinog:notif): when off, no
+ * realtime channel is opened — the badge/inbox stay at their last fetched
+ * state until the user re-enables or opens the inbox manually.
  */
 export function useRealtimeNotifications() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const userId = user?.id;
+  // Reactive: toggling in Settings updates AppShell instantly (same-tab event).
+  const [notifEnabled] = usePreference(PREF_KEYS.notif, true);
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !notifEnabled) return;
     const channel = supabase
       .channel(`notifs:${userId}`)
       .on(
@@ -186,5 +193,10 @@ export function useRealtimeNotifications() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [userId, qc]);
+  }, [userId, qc, notifEnabled]);
+}
+
+/** Synchronous read for non-reactive call sites (event handlers). */
+export function areNotifsEnabled(): boolean {
+  return getPreference(PREF_KEYS.notif, true);
 }

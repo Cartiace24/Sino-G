@@ -8,35 +8,12 @@ import { profilesService } from '../../services/profiles.service';
 import { storageService } from '../../services/storage.service';
 import { authService } from '../../services/auth.service';
 import { getTheme, setTheme, type Theme } from '../../lib/theme';
+import { useAlertsEnabled, useNotifEnabled } from '../../lib/preferences';
 import { friendlyError } from '../../utils/errors';
 import { useToast } from '../../components/common/Toast';
 import { Avatar } from '../../components/common/Avatar';
 import { Button } from '../../components/ui/button';
 import { FieldError, Input, Label, PasswordInput } from '../../components/ui/input';
-
-function useLocalToggle(key: string, initial: boolean): [boolean, () => void] {
-  const [v, setV] = useState(() => {
-    try {
-      const raw = localStorage.getItem(key);
-      return raw == null ? initial : raw === '1';
-    } catch {
-      return initial;
-    }
-  });
-  return [
-    v,
-    () => {
-      setV((prev) => {
-        try {
-          localStorage.setItem(key, prev ? '0' : '1');
-        } catch {
-          /* private mode */
-        }
-        return !prev;
-      });
-    },
-  ];
-}
 
 export function Settings() {
   const { user, profile, refreshProfile, signOut } = useAuth();
@@ -50,8 +27,10 @@ export function Settings() {
   const [pw, setPw] = useState('');
   const [pwOk, setPwOk] = useState<string | null>(null);
 
-  const [notif, toggleNotif] = useLocalToggle('sinog:notif', true);
-  const [alerts, toggleAlerts] = useLocalToggle('sinog:alerts', true);
+  // Shared device prefs (same hooks AppShell/bell/toasts read — toggling
+  // here updates everywhere instantly, same-tab + cross-tab).
+  const [notif, toggleNotif] = useNotifEnabled();
+  const [alerts, toggleAlerts] = useAlertsEnabled();
   const [theme, setThemeState] = useState<Theme>(() => getTheme());
   const toggleTheme = () => {
     const next: Theme = theme === 'dark' ? 'light' : 'dark';
@@ -168,29 +147,43 @@ export function Settings() {
 
       <div className="setgroup">
         <span className="kicker">PREFERENCES</span>
-        <div className="setrow">
+        <button
+          type="button"
+          className="setrow"
+          role="switch"
+          aria-checked={theme === 'dark'}
+          aria-label="Dark mode"
+          onClick={toggleTheme}
+        >
           <Moon size={19} /> Dark mode
-          <span className="switch" role="switch" aria-checked={theme === 'dark'} tabIndex={0}
-            onClick={toggleTheme}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleTheme(); } }}
-            style={theme === 'dark' ? undefined : { background: 'var(--line)' }} />
-        </div>
-        <div className="setrow">
+          <span className="switch" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="setrow"
+          role="switch"
+          aria-checked={notif}
+          aria-label="Notifications"
+          onClick={toggleNotif}
+        >
           <Bell size={19} /> Notifications
-          <span className="switch" role="switch" aria-checked={notif} tabIndex={0}
-            onClick={toggleNotif}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleNotif(); } }}
-            style={notif ? undefined : { background: 'var(--line)' }} />
-        </div>
-        <div className="setrow">
+          <span className="switch" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className="setrow"
+          role="switch"
+          aria-checked={alerts}
+          aria-label="Hangout alerts"
+          onClick={toggleAlerts}
+        >
           <Zap size={19} /> Hangout alerts
-          <span className="switch" role="switch" aria-checked={alerts} tabIndex={0}
-            onClick={toggleAlerts}
-            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleAlerts(); } }}
-            style={alerts ? undefined : { background: 'var(--line)' }} />
-        </div>
+          <span className="switch" aria-hidden="true" />
+        </button>
         <p className="small muted" style={{ padding: '8px 2px' }}>
-          These live on this device for now — push alerts stay out of the MVP on purpose.
+          Notifications pauses the live inbox badge + realtime refresh. Hangout alerts mutes the
+          celebratory toasts (Asked!/Nudged!/You&apos;re down!) — errors still show. Both live on
+          this device for now.
         </p>
       </div>
 

@@ -2,7 +2,13 @@ import { useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups, useRealtimeGroup } from '../../hooks/useGroups';
-import { todayISO, localISODate, FULL_DAY, useGroupAvailability, type DayRange } from '../../hooks/useAvailability';
+import { FULL_DAY, useGroupAvailability, type DayRange } from '../../hooks/useAvailability';
+import { nextDays, todayISO } from '../../utils/dates';
+import {
+  CalendarPopup,
+  CalendarToggleButton,
+  useCalendarDropdown,
+} from '../../components/common/CalendarDropdown';
 import { useRealtimeAvailability } from '../../hooks/useHangouts';
 import { AvatarStack } from '../../components/common/Avatar';
 import { EmptyState, LoadingRows } from '../../components/common/Feedback';
@@ -30,18 +36,6 @@ function hhmmToMinutes(hhmm: string): number {
   return h * 60 + m;
 }
 
-function nextDays(n: number): { iso: string; dow: string; num: string }[] {
-  return Array.from({ length: n }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() + i);
-    return {
-      iso: localISODate(d),
-      dow: d.toLocaleDateString('en-US', { weekday: 'short' }).toUpperCase(),
-      num: String(d.getDate()),
-    };
-  });
-}
-
 export function Plan() {
   const { groupId: paramGroupId } = useParams();
   const { user } = useAuth();
@@ -52,6 +46,9 @@ export function Plan() {
   const [preset, setPreset] = useState<WindowPreset>('all');
   const [customFrom, setCustomFrom] = useState('18:00');
   const [customUntil, setCustomUntil] = useState('23:00');
+  // Shared dropdown calendar (month math + outside-click live in the hook).
+  const cal = useCalendarDropdown(date);
+  const todayIso = useMemo(() => todayISO(), []);
 
   const customValid = hhmmToMinutes(customUntil) > hhmmToMinutes(customFrom);
   // Invalid custom ranges fall back to the full day (with a note) rather
@@ -71,6 +68,9 @@ export function Plan() {
     setDate(d);
     setSlotIdx(null);
   };
+
+  // Past dates disabled in the calendar (availability is forward-looking).
+  const isCustomDate = !days.some((d) => d.iso === date);
 
   const groupsQ = useMyGroups(user?.id);
   const groups = groupsQ.data ?? [];
@@ -137,16 +137,38 @@ export function Plan() {
         </div>
       )}
 
-      <div className="daytabs" style={{ marginTop: 6 }}>
-        {days.map((d) => (
-          <button
-            key={d.iso}
-            className={`daytab${d.iso === date ? ' sel' : ''}`}
-            onClick={() => pickDate(d.iso)}
-          >
-            {d.dow} {d.num}
-          </button>
-        ))}
+      <div className="cal-anchor" ref={cal.ref}>
+        <div className="daytabs" style={{ marginTop: 6 }}>
+          {days.map((d) => (
+            <button
+              key={d.iso}
+              className={`daytab${d.iso === date ? ' sel' : ''}`}
+              onClick={() => pickDate(d.iso)}
+            >
+              {d.dow} {d.num}
+            </button>
+          ))}
+          <CalendarToggleButton
+            value={date}
+            active={isCustomDate}
+            open={cal.open}
+            onClick={cal.openToggle}
+          />
+        </div>
+
+        {cal.open && (
+          <CalendarPopup
+            value={date}
+            min={todayIso}
+            cursor={cal.cursor}
+            cells={cal.cells}
+            onStep={cal.stepMonth}
+            onPick={(iso) => {
+              pickDate(iso);
+              cal.setOpen(false);
+            }}
+          />
+        )}
       </div>
 
       <div style={{ marginTop: 6 }}>

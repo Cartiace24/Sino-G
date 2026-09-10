@@ -11,6 +11,7 @@ import { describeHangoutWhen } from '../../utils/time';
 import { googleMapsUrl } from '../../utils/maps';
 import { localISODate, todayISO } from '../../hooks/useAvailability';
 import { qk } from '../../lib/queryClient';
+import { PREF_KEYS, usePreference } from '../../lib/preferences';
 import { Avatar } from '../../components/common/Avatar';
 import { StatusDot } from '../../components/common/StatusDot';
 import { EmptyState, LoadingRows } from '../../components/common/Feedback';
@@ -49,6 +50,8 @@ export function HangoutDetail() {
 
   const { hangoutQ, responsesQ } = useHangoutDetail(hangoutId);
   const myGroupsQ = useMyGroups(user?.id);
+  // Mutes celebratory hangout toasts when Hangout alerts is off (errors still show).
+  const [alertsOn] = usePreference(PREF_KEYS.alerts, true);
 
   const h = hangoutQ.data;
   const responses = responsesQ.data ?? [];
@@ -115,7 +118,7 @@ export function HangoutDetail() {
         qc.invalidateQueries({ queryKey: ['hangout-counts'] });
       }
       if (user) qc.invalidateQueries({ queryKey: qk.myHangouts(user.id) });
-      toast('<b>Saved.</b> The group will be notified of any changes.');
+      if (alertsOn) toast('<b>Saved.</b> The group will be notified of any changes.');
     },
     onError: (err) => setEditError(friendlyError(err, 'Could not save changes.')),
   });
@@ -124,7 +127,7 @@ export function HangoutDetail() {
     mutationFn: (v: HangoutResponseValue) => hangoutsService.respond(hangoutId!, user!.id, v),
     onSuccess: (_d, v) => {
       qc.invalidateQueries({ queryKey: qk.hangoutResponses(hangoutId!) });
-      toast(CONFIRM_MSG[v]);
+      if (alertsOn) toast(CONFIRM_MSG[v]);
     },
     onError: (err) => toast(friendlyError(err, 'Could not save your response.')),
   });
@@ -132,6 +135,7 @@ export function HangoutDetail() {
   const nudgeMut = useMutation({
     mutationFn: () => hangoutsService.nudge(hangoutId!),
     onSuccess: (count) => {
+      if (!alertsOn) return;
       toast(
         count > 0
           ? `<b>Nudged!</b> ${count} ${count === 1 ? 'friend was' : 'friends were'} notified in-app.`
@@ -146,7 +150,7 @@ export function HangoutDetail() {
   const onNudge = async () => {
     try {
       await navigator.clipboard.writeText(`${h?.creator?.display_name} is asking: ${h?.title ?? 'Hangout?'} ${h?.location ? `at ${h.location}` : ''} — respond in Sino G!`);
-      toast('Copied for the GC — notifying the group in-app too.');
+      if (alertsOn) toast('Copied for the GC — notifying the group in-app too.');
     } catch {
       // Clipboard unavailable: the in-app nudge still goes out below.
     }
@@ -162,7 +166,7 @@ export function HangoutDetail() {
         qc.invalidateQueries({ queryKey: ['hangout-counts'] });
       }
       if (user) qc.invalidateQueries({ queryKey: qk.myHangouts(user.id) });
-      toast(status === 'closed' ? 'Hangout closed. Have fun.' : 'Hangout cancelled.');
+      if (alertsOn) toast(status === 'closed' ? 'Hangout closed. Have fun.' : 'Hangout cancelled.');
       navigate('/g');
     },
     onError: (err) => toast(friendlyError(err, 'Could not update the hangout.')),

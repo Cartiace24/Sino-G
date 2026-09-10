@@ -266,6 +266,32 @@ textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
 .daytab{flex-shrink:0;border:1.5px solid var(--line);background:var(--paper);border-radius:999px;
   padding:9px 16px;font-size:12.5px;font-weight:800;letter-spacing:.08em}
 .daytab.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+/* ---------- plan calendar dropdown (same tokens as daytab/sheet) ---------- */
+.cal-anchor{position:relative}
+.daytab.cal-toggle{display:inline-flex;align-items:center;gap:7px}
+.daytab.cal-toggle svg{flex-shrink:0}
+.daytab.cal-toggle.open{border-color:var(--ink)}
+.cal-pop{position:absolute;top:calc(100% + 2px);right:0;z-index:60;
+  width:304px;max-width:calc(100vw - 40px);
+  background:var(--paper);border:1.5px solid var(--ink);border-radius:16px;
+  padding:14px 14px 12px;box-shadow:0 16px 40px rgba(24,24,23,.18)}
+.cal-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.cal-head strong{font-family:var(--font-d);font-weight:800;font-size:13px;letter-spacing:.08em}
+.cal-nav{width:32px;height:32px;display:grid;place-items:center;border-radius:9px;
+  border:1.5px solid var(--line);background:var(--paper);color:var(--ink)}
+.cal-nav:hover{border-color:var(--ink)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-dow-row{margin-bottom:6px}
+.cal-dow{font-size:10.5px;font-weight:800;letter-spacing:.1em;color:var(--muted);text-align:center;padding:4px 0}
+.cal-day{min-height:36px;border-radius:10px;border:1.5px solid transparent;
+  font-size:13.5px;font-weight:700;color:var(--ink);display:grid;place-items:center}
+.cal-day:hover:not(:disabled){border-color:var(--line);background:var(--bg)}
+.cal-day:disabled{opacity:.28;cursor:default}
+.cal-day.today:not(.sel){border-color:var(--ink)}
+.cal-day.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.cal-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;
+  margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.cal-foot .chip{min-height:0;padding:7px 12px;font-size:12px}
 
 /* ---------- hangout ---------- */
 .hangalert{background:var(--ink);color:#fff;border-radius:16px;padding:26px 22px;margin:6px 0 18px}
@@ -312,8 +338,12 @@ textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
 .setrow svg{width:19px;height:19px;color:var(--ink-2)}
 .setrow .chev{margin-left:auto;color:var(--muted)}
 .setrow.danger{color:var(--busy)} .setrow.danger svg{color:var(--busy)}
-.switch{margin-left:auto;width:48px;height:28px;border-radius:999px;background:var(--ink);position:relative;flex-shrink:0}
-.switch::after{content:"";position:absolute;right:3px;top:3px;width:22px;height:22px;border-radius:50%;background:var(--green)}
+.switch{margin-left:auto;width:48px;height:28px;border-radius:999px;background:var(--line);position:relative;flex-shrink:0;cursor:pointer;transition:background .18s ease}
+.switch::after{content:"";position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:var(--green);transition:transform .18s ease;transform:translateX(0)}
+/* ON state — driven by aria-checked on the switch itself (old markup) or on the parent row (new markup). */
+.switch[aria-checked="true"],.setrow[aria-checked="true"] .switch{background:var(--ink)}
+.switch[aria-checked="true"]::after,.setrow[aria-checked="true"] .switch::after{transform:translateX(20px)}
+.setrow[role="switch"] .switch{pointer-events:none}
 .two-col{display:grid;gap:26px}
 @media(min-width:960px){.two-col{grid-template-columns:1.1fr .9fr;align-items:start}.two-col.flip{grid-template-columns:.9fr 1.1fr}}
 .side-note{background:var(--green-wash);border:1.5px solid var(--ink);border-radius:14px;padding:20px}
@@ -438,6 +468,7 @@ textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
 [data-theme="dark"] .daytab.sel,
 [data-theme="dark"] .time-chip.sel,
 [data-theme="dark"] .chip.sel,
+[data-theme="dark"] .cal-day.sel,
 [data-theme="dark"] .toast{color:#181817}
 [data-theme="dark"] .side-chat-main.active .mini-avatar{color:#181817}
 /* Loading shimmer in dark tones. */
