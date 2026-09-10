@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, ArrowUpRight, Moon, Users } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowRight, ArrowUpRight, Moon, Users, Zap } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups, useRealtimeGroupsList } from '../../hooks/useGroups';
 import { todayISO, useTonight } from '../../hooks/useAvailability';
@@ -9,6 +9,8 @@ import { useMyHangouts, useRealtimeHangouts } from '../../hooks/useHangouts';
 import { groupsService } from '../../services/groups.service';
 import { availabilityService } from '../../services/availability.service';
 import { calculateGroupAvailability, findBestSlot } from '../../utils/availability-calculator';
+import { friendlyError } from '../../utils/errors';
+import { useToast } from '../../components/common/Toast';
 import { qk } from '../../lib/queryClient';
 import { Avatar, AvatarStack } from '../../components/common/Avatar';
 import { EmptyState, ErrorState, LoadingRows } from '../../components/common/Feedback';
@@ -146,6 +148,34 @@ export function Today() {
 
   const freeCount = tonight.summary.freeTonight.length;
   const hangouts = hangoutsQ.data ?? [];
+  const imFreeTonight = user ? tonight.summary.freeTonight.includes(user.id) : false;
+
+  // One-tap activation: tonight 6–10 PM free, no form. Overlapping saves are
+  // legal (busy wins a slot), so this never corrupts existing windows.
+  const [taraPending, setTaraPending] = useState(false);
+  const qc = useQueryClient();
+  const toast = useToast();
+  const onTaraTonight = async () => {
+    if (!user || taraPending || imFreeTonight) return;
+    setTaraPending(true);
+    try {
+      await availabilityService.save(user.id, {
+        date: today,
+        start_time: '18:00',
+        end_time: '22:00',
+        status: 'free',
+      });
+      qc.invalidateQueries({ queryKey: ['my-availability'] });
+      qc.invalidateQueries({ queryKey: qk.groupAvailabilityAll() });
+      qc.invalidateQueries({ queryKey: qk.tonightForUser(user.id) });
+      qc.invalidateQueries({ queryKey: qk.bestUpcoming() });
+      toast("<b>You're in for tonight.</b> The barkada can see it.");
+    } catch (err) {
+      toast(friendlyError(err, 'Could not save that. Try again.'));
+    } finally {
+      setTaraPending(false);
+    }
+  };
 
   return (
     <>
@@ -222,6 +252,21 @@ export function Today() {
               Set my availability
             </button>
           </div>
+          <div style={{ marginTop: 10 }}>
+            <button
+              className={`btn btn-block ${imFreeTonight ? 'btn-paper' : 'btn-green'}`}
+              disabled={imFreeTonight || taraPending || tonight.rowsQ.isLoading}
+              onClick={onTaraTonight}
+              aria-live="polite"
+            >
+              <Zap size={16} />{' '}
+              {imFreeTonight
+                ? "YOU'RE IN TONIGHT"
+                : taraPending
+                  ? 'Saving…'
+                  : 'TARA, G TONIGHT? · 6–10 PM'}
+            </button>
+          </div>
         </div>
         <div>
           <div className="besthero">
@@ -282,10 +327,100 @@ export function Today() {
             ) : (
               <>
                 <h3>No signal yet.</h3>
-                <p>Once the group marks availability, the best time shows up here.</p>
-                <div style={{ marginTop: 12 }}>
-                  <button className="btn btn-green btn-sm" onClick={() => navigate('/availability')}>
-                    Set availability
+                <p>Get the barkada moving in 3 steps:</p>
+                <div className="rows" style={{ marginTop: 12, borderTop: '1px solid rgba(255,255,255,.14)' }}>
+                  <button
+                    className="member-row"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,.14)', padding: '10px 2px' }}
+                    onClick={() => navigate('/availability')}
+                  >
+                    <span
+                      className="mini-avatar"
+                      aria-hidden
+                      style={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: 8,
+                        display: 'grid',
+                        placeItems: 'center',
+                        fontSize: 12,
+                        fontWeight: 800,
+                        background: (tonight.rowsQ.data?.length ?? 0) > 0 ? 'var(--green)' : 'transparent',
+                        border: '1.5px solid var(--green)',
+                        color: (tonight.rowsQ.data?.length ?? 0) > 0 ? 'var(--ink)' : 'var(--green)',
+                      }}
+                    >
+                      {(tonight.rowsQ.data?.length ?? 0) > 0 ? '✓' : '1'}
+                    </span>
+                    <span className="who">
+                      <strong style={{ color: '#fff', fontSize: 14 }}>Set your availability</strong>
+                      <small style={{ color: '#cfccc2' }}>~20 seconds</small>
+                    </span>
+                    <span className="right">
+                      <ArrowUpRight size={16} style={{ color: 'var(--green)' }} />
+                    </span>
+                  </button>
+                  <button
+                    className="member-row"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,.14)', padding: '10px 2px' }}
+                    onClick={() => navigate(`/groups/${groups[0].id}`)}
+                  >
+                    <span
+                      className="mini-avatar"
+                      aria-hidden
+                      style={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: 8,
+                        display: 'grid',
+                        placeItems: 'center',
+                        fontSize: 12,
+                        fontWeight: 800,
+                        background: groups.some((g) => g.member_count > 1) ? 'var(--green)' : 'transparent',
+                        border: '1.5px solid var(--green)',
+                        color: groups.some((g) => g.member_count > 1) ? 'var(--ink)' : 'var(--green)',
+                      }}
+                    >
+                      {groups.some((g) => g.member_count > 1) ? '✓' : '2'}
+                    </span>
+                    <span className="who">
+                      <strong style={{ color: '#fff', fontSize: 14 }}>Invite the barkada</strong>
+                      <small style={{ color: '#cfccc2' }}>Share the group code</small>
+                    </span>
+                    <span className="right">
+                      <ArrowUpRight size={16} style={{ color: 'var(--green)' }} />
+                    </span>
+                  </button>
+                  <button
+                    className="member-row"
+                    style={{ borderBottom: '1px solid rgba(255,255,255,.14)', padding: '10px 2px' }}
+                    onClick={() => navigate('/g')}
+                  >
+                    <span
+                      className="mini-avatar"
+                      aria-hidden
+                      style={{
+                        width: 26,
+                        height: 26,
+                        borderRadius: 8,
+                        display: 'grid',
+                        placeItems: 'center',
+                        fontSize: 12,
+                        fontWeight: 800,
+                        background: hangouts.length > 0 ? 'var(--green)' : 'transparent',
+                        border: '1.5px solid var(--green)',
+                        color: hangouts.length > 0 ? 'var(--ink)' : 'var(--green)',
+                      }}
+                    >
+                      {hangouts.length > 0 ? '✓' : '3'}
+                    </span>
+                    <span className="who">
+                      <strong style={{ color: '#fff', fontSize: 14 }}>Start a hangout</strong>
+                      <small style={{ color: '#cfccc2' }}>Ask who&apos;s down</small>
+                    </span>
+                    <span className="right">
+                      <ArrowUpRight size={16} style={{ color: 'var(--green)' }} />
+                    </span>
                   </button>
                 </div>
               </>

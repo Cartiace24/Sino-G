@@ -47,7 +47,7 @@ const WHEN_PRESETS: WhenPreset[] = [
   { label: 'Tomorrow · 2 PM', at: () => atTime(shiftDays(new Date(), 1), 14) },
 ];
 
-/** "7 PM" / "7:30 PM" (as passed from Plan's best slot) -> today at that time. */
+/** "7 PM" / "7:30 PM" (as passed from Plan's best slot) -> that time. */
 function parseTimeLabel(label: string): Date | null {
   const m = label.trim().match(/^(\d{1,2})(?::(\d{2}))?\s*(AM|PM)$/i);
   if (!m) return null;
@@ -59,13 +59,32 @@ function parseTimeLabel(label: string): Date | null {
   return atTime(new Date(), h, min);
 }
 
-function initialWhen(param: string | null): Date {
+/** Valid YYYY-MM-DD (as passed from Plan via &date=). */
+function parseDateParam(iso: string | null): { y: number; m: number; d: number } | null {
+  if (!iso || !/^\d{4}-\d{2}-\d{2}$/.test(iso)) return null;
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
+  return { y, m: m - 1, d };
+}
+
+function applyDate(base: Date, dateParam: string | null): Date {
+  const parsed = parseDateParam(dateParam);
+  if (!parsed) return base;
+  const next = new Date(base);
+  next.setFullYear(parsed.y, parsed.m, parsed.d);
+  return next;
+}
+
+function initialWhen(param: string | null, dateParam: string | null): Date {
   if (param) {
     const legacy = WHEN_PRESETS.find((p) => p.label === param);
-    if (legacy) return legacy.at();
+    if (legacy) return applyDate(legacy.at(), dateParam);
     const parsed = parseTimeLabel(param);
-    if (parsed) return parsed;
+    if (parsed) return applyDate(parsed, dateParam);
   }
+  const fallback = parseDateParam(dateParam);
+  if (fallback) return atTime(new Date(fallback.y, fallback.m, fallback.d), 19);
   return WHEN_PRESETS[0].at();
 }
 
@@ -107,7 +126,8 @@ export function Hangouts() {
   const [pickerOpen, setPickerOpen] = useState(false);
   // Canonical selection: one real datetime. Presets and pickers both
   // read/write this — there is no separate label state to drift.
-  const [whenDate, setWhenDate] = useState<Date>(() => initialWhen(params.get('when')));
+  // Plan deep-links pass ?when= (time label) + ?date= (YYYY-MM-DD).
+  const [whenDate, setWhenDate] = useState<Date>(() => initialWhen(params.get('when'), params.get('date')));
   const [error, setError] = useState<string | null>(null);
   // Hangout alerts toggle mutes celebratory toasts (errors still surface).
   const [alertsOn] = usePreference(PREF_KEYS.alerts, true);

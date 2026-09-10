@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from 'react';
+import { Suspense, lazy, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, CalendarX, Clock, MapPin, MessageCircle, Pencil, Share2, Users } from 'lucide-react';
@@ -62,6 +62,44 @@ export function HangoutDetail() {
   const myResp = responses.find((r) => r.user_id === user?.id)?.response;
   const myRole = myGroupsQ.data?.find((g) => g.id === h?.group_id)?.my_role;
   const canClose = h && (h.created_by === user?.id || myRole === 'owner' || myRole === 'admin');
+
+  // Live arrival moment: when a NEW down response lands via realtime refetch,
+  // celebrate it (gated by the Hangout alerts toggle like all other cheers).
+  // Skips the first population so opening the page never toasts history.
+  const knownDowns = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!responsesQ.data || !alertsOn) {
+      if (responsesQ.data && !knownDowns.current) {
+        knownDowns.current = new Set(
+          responsesQ.data.filter((r) => r.response === 'down').map((r) => r.user_id),
+        );
+      }
+      return;
+    }
+    const current = new Set(
+      responsesQ.data.filter((r) => r.response === 'down').map((r) => r.user_id),
+    );
+    if (knownDowns.current == null) {
+      knownDowns.current = current;
+      return;
+    }
+    const fresh = responsesQ.data.filter(
+      (r) => r.response === 'down' && !knownDowns.current!.has(r.user_id) && r.user_id !== user?.id,
+    );
+    knownDowns.current = current;
+    if (fresh.length === 0) return;
+    const names = fresh.map((r) => r.profile?.display_name ?? 'Someone');
+    toast(
+      names.length === 1
+        ? `<b>${names[0]} is down!</b> The group is growing.`
+        : `<b>${names[0]} and ${fresh.length - 1} more are down!</b> The group is growing.`,
+    );
+    try {
+      navigator.vibrate?.(20);
+    } catch {
+      /* haptics unsupported — toast already landed */
+    }
+  }, [responsesQ.data, alertsOn, toast, user?.id]);
 
   // Edit-details draft (date/time/location only — title stays fixed in V1).
   const [editing, setEditing] = useState(false);

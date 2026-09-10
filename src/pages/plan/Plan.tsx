@@ -125,6 +125,9 @@ export function Plan() {
   }
 
   const max = Math.max(1, ...slots.map((s) => s.score));
+  // Full crew at the best slot (2+ friends) — the screenshot moment.
+  const isFullHouse = (best?.slot.free ?? 0) === memberIds.length && memberIds.length >= 2;
+  const CONFETTI_COLORS = ['#B6D83B', '#FBFAF7', '#FF6B35', '#4d6600'];
 
   return (
     <>
@@ -255,7 +258,22 @@ export function Plan() {
       ) : best ? (
         <>
           <div className="besthero">
-            <span className="tag-best">★ BEST TIME</span>
+            {isFullHouse && (
+              <span className="confetti" aria-hidden>
+                {Array.from({ length: 14 }).map((_, i) => (
+                  <i
+                    key={i}
+                    style={{
+                      left: `${(i * 71) % 100}%`,
+                      background: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+                      animationDuration: `${2.4 + (i % 5) * 0.5}s`,
+                      animationDelay: `${(i % 7) * 0.35}s`,
+                    }}
+                  />
+                ))}
+              </span>
+            )}
+            <span className="tag-best">{isFullHouse ? '★ FULL HOUSE' : '★ BEST TIME'}</span>
             <h3>
               {new Date(date + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase()}
               <br />
@@ -263,18 +281,26 @@ export function Plan() {
             </h3>
             <div className="row-between">
               <p>
-                <b style={{ color: '#fff' }}>
-                  {best.slot.free} of {memberIds.length} friends
-                </b>{' '}
-                available
+                {isFullHouse ? (
+                  <b style={{ color: '#fff' }}>Everyone&apos;s free</b>
+                ) : (
+                  <>
+                    <b style={{ color: '#fff' }}>
+                      {best.slot.free} of {memberIds.length} friends
+                    </b>{' '}
+                    available
+                  </>
+                )}
               </p>
               <button
                 className="btn btn-green btn-sm"
                 onClick={() =>
-                  navigate(`/g?group=${group!.id}&when=${encodeURIComponent(best.slot.label)}`)
+                  navigate(
+                  `/g?group=${group!.id}&when=${encodeURIComponent(best.slot.label)}&date=${date}`,
+                )
                 }
               >
-                Ask the group
+                {isFullHouse ? 'Tara, G!' : 'Ask the group'}
               </button>
             </div>
           </div>

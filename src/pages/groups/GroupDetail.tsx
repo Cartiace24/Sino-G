@@ -194,13 +194,25 @@ export function GroupDetail() {
   const invite = async () => {
     if (!group) return;
     const link = `${window.location.origin}/onboarding/group?code=${group.invite_code}`;
+    const text = `Join ${group.name} on Sino G! Code: ${group.invite_code} — ${link}`;
+    // Real share sheet on mobile (GC, Messenger…); clipboard fallback on desktop.
     try {
-      await navigator.clipboard.writeText(`Join ${group.name} on Sino G! Code: ${group.invite_code} — ${link}`);
-      setCopied(true);
-      toast('<b>Invite copied.</b> Drop it in the GC.');
-      window.setTimeout(() => setCopied(false), 2500);
-    } catch {
-      toast(`Code: <b>${group.invite_code}</b>`);
+      if (navigator.share) {
+        await navigator.share({ title: `Join ${group.name} on Sino G`, text, url: link });
+        return;
+      }
+      throw new Error('no-share');
+    } catch (err) {
+      // User dismissing the sheet throws AbortError — not a failure, stay silent-ish.
+      if (err instanceof DOMException && err.name === 'AbortError') return;
+      try {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        toast('<b>Invite copied.</b> Drop it in the GC.');
+        window.setTimeout(() => setCopied(false), 2500);
+      } catch {
+        toast(`Code: <b>${group.invite_code}</b>`);
+      }
     }
   };
 

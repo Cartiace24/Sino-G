@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Route, Routes, Navigate, useLocation } from 'react-router-dom';
 import { AppShell } from './components/common/AppShell';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
@@ -49,10 +49,37 @@ const NotificationsPage = lazy(() =>
   import('./pages/notifications/Notifications').then((m) => ({ default: m.NotificationsPage })),
 );
 
+/** Per-route tab titles (tabs/history show every screen distinctly). */
+function useRouteTitle(pathname: string): void {
+  useEffect(() => {
+    let title = "Who's Free?";
+    if (pathname === '/login') title = 'Log in';
+    else if (pathname === '/register') title = 'Create account';
+    else if (pathname.startsWith('/forgot') || pathname === '/forgot-password') title = 'Reset password';
+    else if (pathname === '/reset-password') title = 'New password';
+    else if (pathname === '/onboarding/profile') title = 'Your profile';
+    else if (pathname === '/onboarding/group') title = 'Find your group';
+    else if (pathname === '/today') title = 'Today';
+    else if (pathname === '/plan' || pathname.endsWith('/availability')) title = 'Plan';
+    else if (pathname === '/groups') title = 'Groups';
+    else if (pathname.endsWith('/settings')) title = 'Group settings';
+    else if (pathname.endsWith('/chat')) title = 'Group chat';
+    else if (pathname.startsWith('/groups/')) title = 'Group';
+    else if (pathname === '/availability') title = 'My availability';
+    else if (pathname === '/g') title = "Who's down?";
+    else if (pathname.startsWith('/g/')) title = 'Hangout';
+    else if (pathname === '/me') title = 'Me';
+    else if (pathname === '/settings') title = 'Settings';
+    else if (pathname === '/notifications') title = 'Notifications';
+    document.title = `${title} · Sino G`;
+  }, [pathname]);
+}
+
 function AppRoutes() {
   // resetKey: navigating away from a crashed route clears the error so the
   // boundary can never trap the app permanently.
   const { pathname } = useLocation();
+  useRouteTitle(pathname);
   return (
     <ErrorBoundary resetKey={pathname}>
       <Suspense fallback={<LoadingRows rows={5} />}>

@@ -392,6 +392,12 @@ textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
 
 /* Best-time CTA keeps one line; the accompanying text wraps instead. */
 .besthero .btn{flex-shrink:0;white-space:nowrap}
+/* Full-house confetti (pure CSS divs, clipped by the hero). */
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit}
+.confetti i{position:absolute;top:-14px;width:8px;height:12px;border-radius:2px;opacity:.9;
+  animation-name:confFall;animation-timing-function:linear;animation-iteration-count:infinite}
+@keyframes confFall{to{transform:translateY(340px) rotate(540deg)}}
+@media (prefers-reduced-motion:reduce){.confetti{display:none}}
 
 /* Bare icon buttons (no .btn class) get a ~36px hit area with zero visual
    change: the added padding is cancelled by negative margin. */

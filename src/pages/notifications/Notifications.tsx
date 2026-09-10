@@ -53,6 +53,33 @@ export function NotificationsPage() {
   const items = listQ.data ?? [];
   const unread = unreadQ.data ?? 0;
 
+  // Day sections (same TODAY/YESTERDAY language as group chat dividers).
+  const sections = (() => {
+    const groups = new Map<string, { label: string; items: NotificationWithActor[] }>();
+    const now = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(now.getDate() - 1);
+    const dayKey = (iso: string) => {
+      const d = new Date(iso);
+      return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+    };
+    const dayLabel = (iso: string) => {
+      const d = new Date(iso);
+      const sameDay = (a: Date, b: Date) =>
+        a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+      if (sameDay(d, now)) return 'TODAY';
+      if (sameDay(d, yesterday)) return 'YESTERDAY';
+      return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+    };
+    for (const n of items) {
+      const key = dayKey(n.created_at);
+      const bucket = groups.get(key) ?? { label: dayLabel(n.created_at), items: [] };
+      bucket.items.push(n);
+      groups.set(key, bucket);
+    }
+    return [...groups.values()];
+  })();
+
   const open = (n: NotificationWithActor) => {
     // Fire-and-forget: navigation must never wait on the read mutation.
     if (!n.read_at) markRead.mutate(n.id);
@@ -124,7 +151,14 @@ export function NotificationsPage() {
         </div>
       ) : (
         <div style={{ marginTop: 10 }}>
-          {items.map((n) => {
+          {sections.map((sec) => (
+            <div key={sec.label}>
+              <div style={{ margin: '14px 0 2px' }}>
+                <span className="kicker" style={{ background: 'var(--bg-deep)', borderRadius: 999, padding: '4px 12px' }}>
+                  {sec.label}
+                </span>
+              </div>
+              {sec.items.map((n) => {
             const fresh = !n.read_at;
             const actorName = n.actor?.display_name ?? 'Sino G';
             return (
@@ -165,6 +199,8 @@ export function NotificationsPage() {
               </button>
             );
           })}
+            </div>
+          ))}
         </div>
       )}
     </>
