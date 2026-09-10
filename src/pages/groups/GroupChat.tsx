@@ -9,6 +9,7 @@ import {
   useRealtimeGroupChat,
   useSendMessage,
 } from '../../hooks/useChat';
+import { useMarkGroupChatRead, useUnreadChatGroups } from '../../hooks/useNotifications';
 import { CHAT_MAX_LENGTH } from '../../services/chat.service';
 import { timeAgo } from '../../utils/time';
 import { Avatar } from '../../components/common/Avatar';
@@ -39,6 +40,17 @@ export function GroupChat() {
   useRealtimeGroupChat(groupId);
   // Membership loss / group deletion degrades to the can't-open state below.
   useRealtimeGroup(groupId);
+
+  // Opening the conversation acknowledges it: silently clear this group's
+  // unread message dots (once per mount; realtime keeps them truthful after).
+  const { mutate: markChatRead } = useMarkGroupChatRead();
+  const unreadChat = useUnreadChatGroups(user?.id);
+  const markedRef = useRef(false);
+  useEffect(() => {
+    if (!groupId || markedRef.current || !unreadChat.has(groupId)) return;
+    markedRef.current = true;
+    markChatRead(groupId);
+  }, [groupId, unreadChat, markChatRead]);
 
   const [draft, setDraft] = useState('');
   const loadedOnce = useRef(false);

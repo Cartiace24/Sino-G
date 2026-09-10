@@ -89,6 +89,24 @@ export interface CreateHangoutInput {
   title?: string;
   message?: string;
   location?: string;
+  location_lat?: number | null;
+  location_lng?: number | null;
   proposed_time?: string | null; // ISO string
   expires_at?: string | null;
+}
+
+/** Editable hangout details (date/time/location). Title edits are out of V1. */
+export interface UpdateHangoutInput {
+  proposed_time?: string | null; // ISO string
+  location?: string | null;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  message?: string | null;
+}
+
+/** A pinned map selection: readable name plus exact coordinates. */
+export interface PinnedLocation {
+  name: string;
+  lat: number;
+  lng: number;
 }

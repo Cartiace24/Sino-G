@@ -5,6 +5,7 @@ import type {
   HangoutCounts,
   HangoutWithMeta,
   ResponseWithProfile,
+  UpdateHangoutInput,
 } from '../types/app.types';
 
 export function countResponses(
@@ -58,6 +59,8 @@ export const hangoutsService = {
         title: input.title?.trim() || null,
         message: input.message?.trim() || null,
         location: input.location?.trim() || null,
+        location_lat: input.location_lat ?? null,
+        location_lng: input.location_lng ?? null,
         proposed_time: input.proposed_time ?? null,
         expires_at: input.expires_at ?? null,
         status: 'active',
@@ -73,6 +76,35 @@ export const hangoutsService = {
       .from('hangout_requests')
       .update({ status })
       .eq('id', hangoutId);
+    if (error) throw error;
+  },
+
+  /**
+   * Edit date/time/location. RLS (creator/owner/admin) is the authority.
+   * The notify_hangout_updated trigger decides whether anyone is notified.
+   */
+  async updateHangout(hangoutId: string, patch: UpdateHangoutInput): Promise<void> {
+    const dbPatch: {
+      proposed_time?: string | null;
+      location?: string | null;
+      location_lat?: number | null;
+      location_lng?: number | null;
+      message?: string | null;
+    } = {};
+    if (patch.proposed_time !== undefined) dbPatch.proposed_time = patch.proposed_time;
+    if (patch.location !== undefined) {
+      const clean = patch.location?.trim() || null;
+      dbPatch.location = clean;
+      // Clearing the name also clears a stale pin.
+      if (clean == null) {
+        dbPatch.location_lat = null;
+        dbPatch.location_lng = null;
+      }
+    }
+    if (patch.location_lat !== undefined) dbPatch.location_lat = patch.location_lat;
+    if (patch.location_lng !== undefined) dbPatch.location_lng = patch.location_lng;
+    if (patch.message !== undefined) dbPatch.message = patch.message?.trim() || null;
+    const { error } = await supabase.from('hangout_requests').update(dbPatch).eq('id', hangoutId);
     if (error) throw error;
   },
 

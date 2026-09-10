@@ -64,8 +64,8 @@ npm run typecheck             # tsc --noEmit only
    `https://<your-app>/today`).
 3. **SQL Editor** (or `supabase db push`): run the migrations in order —
    `0001_init` (tables, RLS, triggers, invites, storage, realtime) through
-   `0011_group_chat` (group messages + `new_message` notifications).
-   See `supabase/migrations/` for per-file details.
+   `0012_hangout_location_updates` (pin coords + `hangout_updated`
+   notifications). See `supabase/migrations/` for per-file details.
 4. Full `auth.users` wipe on account deletion is intentionally out of RLS
    scope — remove users via Dashboard → Authentication or the Admin API.
 

@@ -57,4 +57,20 @@ export const notificationsService = {
     const { error } = await supabase.from('notifications').delete().eq('user_id', userId);
     if (error) throw error;
   },
+
+  /**
+   * Mark a group's unread message notifications as read (e.g. when its chat
+   * is opened). Scoped to type=new_message so other notification kinds are
+   * untouched. RLS restricts to the caller's own rows.
+   */
+  async markGroupRead(userId: string, groupId: string): Promise<void> {
+    const { error } = await supabase
+      .from('notifications')
+      .update({ read_at: new Date().toISOString() })
+      .eq('user_id', userId)
+      .eq('group_id', groupId)
+      .eq('type', 'new_message')
+      .is('read_at', null);
+    if (error) throw error;
+  },
 };

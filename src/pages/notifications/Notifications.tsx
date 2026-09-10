@@ -32,6 +32,7 @@ export function notificationTarget(n: NotificationWithActor): string {
     case 'hangout_cancelled':
     case 'hangout_closed':
     case 'hangout_nudge':
+    case 'hangout_updated':
       if (n.hangout_id) return `/g/${n.hangout_id}`;
       if (n.group_id) return `/groups/${n.group_id}`;
       return '/g';

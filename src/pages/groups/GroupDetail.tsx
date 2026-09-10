@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Link2, MessageCircle, MoreHorizontal, Settings2, UserPlus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGroup, useGroupMembers, useMyGroups, useRealtimeGroup } from '../../hooks/useGroups';
+import { useUnreadChatGroups } from '../../hooks/useNotifications';
 import { useGroupHangouts } from '../../hooks/useHangouts';
 import { todayISO } from '../../hooks/useAvailability';
 import { groupsService } from '../../services/groups.service';
@@ -30,6 +31,8 @@ export function GroupDetail() {
   const membersQ = useGroupMembers(groupId);
   const myGroupsQ = useMyGroups(user?.id);
   const hangoutsQ = useGroupHangouts(groupId);
+  // Unread chat signal (derived from message notifications, no extra fetch).
+  const unreadChat = useUnreadChatGroups(user?.id);
   // Live joins / leaves / removals / role changes / renames — no refresh.
   useRealtimeGroup(groupId);
 
@@ -329,6 +332,9 @@ export function GroupDetail() {
         </Button>
         <Button variant="line" size="sm" onClick={() => navigate(`/groups/${groupId}/chat`)}>
           <MessageCircle size={15} /> Chat
+          {groupId && unreadChat.has(groupId) && (
+            <span className="dot free" role="img" aria-label="Unread messages" />
+          )}
         </Button>
       </div>
 

@@ -66,6 +66,8 @@ export type HangoutRequestRow = {
   title: string | null;
   message: string | null;
   location: string | null;
+  location_lat: number | null;
+  location_lng: number | null;
   proposed_time: string | null;
   expires_at: string | null;
   status: HangoutStatus;
@@ -90,7 +92,8 @@ export type NotificationType =
   | 'hangout_cancelled'
   | 'hangout_closed'
   | 'hangout_nudge'
-  | 'new_message';
+  | 'new_message'
+  | 'hangout_updated';
 
 export type ChatMessageRow = {
   id: string;
@@ -148,8 +151,8 @@ export interface Database {
       };
       hangout_requests: {
         Row: HangoutRequestRow;
-        Insert: { group_id: string; created_by: string; title?: string | null; message?: string | null; location?: string | null; proposed_time?: string | null; expires_at?: string | null; status?: HangoutStatus };
-        Update: { title?: string | null; message?: string | null; location?: string | null; proposed_time?: string | null; expires_at?: string | null; status?: HangoutStatus };
+        Insert: { group_id: string; created_by: string; title?: string | null; message?: string | null; location?: string | null; location_lat?: number | null; location_lng?: number | null; proposed_time?: string | null; expires_at?: string | null; status?: HangoutStatus };
+        Update: { title?: string | null; message?: string | null; location?: string | null; location_lat?: number | null; location_lng?: number | null; proposed_time?: string | null; expires_at?: string | null; status?: HangoutStatus };
         Relationships: [];
       };
       hangout_responses: {

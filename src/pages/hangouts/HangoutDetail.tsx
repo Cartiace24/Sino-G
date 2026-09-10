@@ -1,18 +1,32 @@
+import { Suspense, lazy, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Clock, MapPin, Share2, Users } from 'lucide-react';
+import { ArrowLeft, Clock, MapPin, MessageCircle, Pencil, Share2, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHangoutDetail } from '../../hooks/useHangouts';
 import { useMyGroups } from '../../hooks/useGroups';
 import { countResponses, hangoutsService } from '../../services/hangouts.service';
 import { friendlyError } from '../../utils/errors';
+import { describeHangoutWhen } from '../../utils/time';
+import { googleMapsUrl } from '../../utils/maps';
+import { localISODate, todayISO } from '../../hooks/useAvailability';
 import { qk } from '../../lib/queryClient';
 import { Avatar } from '../../components/common/Avatar';
 import { StatusDot } from '../../components/common/StatusDot';
 import { EmptyState, LoadingRows } from '../../components/common/Feedback';
 import { useToast } from '../../components/common/Toast';
 import { Button } from '../../components/ui/button';
+import { FieldError, Input, Label } from '../../components/ui/input';
 import type { HangoutResponseValue } from '../../types/database.types';
+import type { PinnedLocation } from '../../types/app.types';
+
+const LocationPicker = lazy(() =>
+  import('../../components/hangouts/LocationPicker').then((m) => ({ default: m.LocationPicker })),
+);
+
+function toInputTime(d: Date): string {
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
 
 const OPTIONS: { value: HangoutResponseValue; label: string; cls: string }[] = [
   { value: 'down', label: "I'M DOWN", cls: 'down' },
@@ -45,6 +59,66 @@ export function HangoutDetail() {
   const myResp = responses.find((r) => r.user_id === user?.id)?.response;
   const myRole = myGroupsQ.data?.find((g) => g.id === h?.group_id)?.my_role;
   const canClose = h && (h.created_by === user?.id || myRole === 'owner' || myRole === 'admin');
+
+  // Edit-details draft (date/time/location only — title stays fixed in V1).
+  const [editing, setEditing] = useState(false);
+  const [eDate, setEDate] = useState('');
+  const [eTime, setETime] = useState('');
+  const [eWhere, setEWhere] = useState('');
+  const [ePin, setEPin] = useState<PinnedLocation | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const openEditor = () => {
+    if (!h) return;
+    if (h.proposed_time) {
+      const d = new Date(h.proposed_time);
+      setEDate(localISODate(d));
+      setETime(toInputTime(d));
+    } else {
+      setEDate(todayISO());
+      setETime('19:00');
+    }
+    setEWhere(h.location ?? '');
+    setEPin(
+      h.location != null && h.location_lat != null && h.location_lng != null
+        ? { name: h.location, lat: h.location_lat, lng: h.location_lng }
+        : null,
+    );
+    setEditError(null);
+    setEditing(true);
+  };
+
+  const editMut = useMutation({
+    mutationFn: () => {
+      if (!eDate || !eTime) throw new Error('Pick a date and time first.');
+      const at = new Date(`${eDate}T${eTime}:00`);
+      if (Number.isNaN(at.getTime())) throw new Error('That date and time look off — try again.');
+      if (at.getTime() <= Date.now()) throw new Error('That time has already passed — pick a future time.');
+      const name = eWhere.trim() || null;
+      const keepPin = ePin && name === ePin.name ? ePin : null;
+      return hangoutsService.updateHangout(hangoutId!, {
+        proposed_time: at.toISOString(),
+        location: name,
+        location_lat: keepPin?.lat ?? null,
+        location_lng: keepPin?.lng ?? null,
+        message: `When: ${describeHangoutWhen(at)}`,
+      });
+    },
+    onSuccess: () => {
+      setEditError(null);
+      setEditing(false);
+      setPickerOpen(false);
+      qc.invalidateQueries({ queryKey: qk.hangout(hangoutId!) });
+      if (h) {
+        qc.invalidateQueries({ queryKey: qk.hangouts(h.group_id) });
+        qc.invalidateQueries({ queryKey: ['hangout-counts'] });
+      }
+      if (user) qc.invalidateQueries({ queryKey: qk.myHangouts(user.id) });
+      toast('<b>Saved.</b> The group will be notified of any changes.');
+    },
+    onError: (err) => setEditError(friendlyError(err, 'Could not save changes.')),
+  });
 
   const respondMut = useMutation({
     mutationFn: (v: HangoutResponseValue) => hangoutsService.respond(hangoutId!, user!.id, v),
@@ -115,6 +189,8 @@ export function HangoutDetail() {
   const down = responses.filter((r) => r.response === 'down');
   const maybe = responses.filter((r) => r.response === 'maybe');
   const cant = responses.filter((r) => r.response === 'unavailable');
+  // Exact pin when present, readable-name search for legacy text rows.
+  const mapsUrl = googleMapsUrl(h.location, h.location_lat ?? null, h.location_lng ?? null);
 
   return (
     <>
@@ -130,10 +206,10 @@ export function HangoutDetail() {
         </p>
         <h2>{h.title ?? 'Hangout?'}</h2>
         <div className="meta">
-          {h.location && (
-            <span>
+          {h.location && mapsUrl && (
+            <a className="map-pill" href={mapsUrl} target="_blank" rel="noreferrer">
               <MapPin size={15} /> {h.location}
-            </span>
+            </a>
           )}
           {h.message && (
             <span>
@@ -235,8 +311,21 @@ export function HangoutDetail() {
             <Share2 size={16} /> {nudgeMut.isPending ? 'Nudging…' : "Nudge the GC"}
           </Button>
         )}
+        <Button variant="paper" size="sm" onClick={() => navigate(`/groups/${h.group_id}/chat`)}>
+          <MessageCircle size={15} /> Open group chat
+        </Button>
         {canClose && h.status === 'active' && (
           <>
+            <Button
+              variant="paper"
+              size="sm"
+              onClick={() => {
+                if (editing) setEditing(false);
+                else openEditor();
+              }}
+            >
+              <Pencil size={15} /> {editing ? 'Close editor' : 'Edit details'}
+            </Button>
             <Button variant="paper" size="sm" onClick={() => closeMut.mutate('closed')} disabled={closeMut.isPending}>
               Close hangout
             </Button>
@@ -246,6 +335,65 @@ export function HangoutDetail() {
           </>
         )}
       </div>
+
+      {editing && canClose && h.status === 'active' && (
+        <div className="sheet" style={{ marginTop: 14 }}>
+          <span className="kicker">EDIT DATE, TIME &amp; PLACE</span>
+          <div className="timegrid" style={{ marginTop: 12 }}>
+            <div>
+              <Label htmlFor="edit-date">Date</Label>
+              <Input id="edit-date" type="date" min={todayISO()} value={eDate} onChange={(e) => setEDate(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="edit-time">Time</Label>
+              <Input id="edit-time" type="time" value={eTime} onChange={(e) => setETime(e.target.value)} />
+            </div>
+          </div>
+          <div className="field" style={{ marginTop: 12 }}>
+            <Label htmlFor="edit-where">Where? (optional)</Label>
+            <Input
+              id="edit-where"
+              placeholder="e.g. Nuvali"
+              value={eWhere}
+              onChange={(e) => {
+                setEWhere(e.target.value);
+                if (ePin && e.target.value.trim() !== ePin.name) setEPin(null);
+              }}
+            />
+            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button type="button" className="btn btn-paper btn-sm" onClick={() => setPickerOpen(true)}>
+                <MapPin size={15} /> {ePin ? 'Change pin' : 'Pin a location'}
+              </button>
+              {ePin && <span className="small muted">Exact map location saved</span>}
+            </div>
+          </div>
+          <FieldError message={editError} />
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <Button variant="green" size="sm" disabled={editMut.isPending} onClick={() => editMut.mutate()}>
+              {editMut.isPending ? 'Saving…' : 'Save changes'}
+            </Button>
+            <Button variant="paper" size="sm" onClick={() => setEditing(false)}>
+              Cancel
+            </Button>
+          </div>
+          <p className="small muted" style={{ marginTop: 10 }}>
+            The group is notified only when the time or place actually changes.
+          </p>
+        </div>
+      )}
+      {pickerOpen && (
+        <Suspense fallback={<LoadingRows rows={3} />}>
+          <LocationPicker
+            initial={ePin}
+            onClose={() => setPickerOpen(false)}
+            onConfirm={(loc) => {
+              setEWhere(loc.name);
+              setEPin(loc);
+              setPickerOpen(false);
+            }}
+          />
+        </Suspense>
+      )}
     </>
   );
 }

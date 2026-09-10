@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useEffect } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
@@ -91,8 +92,7 @@ export function useMarkAllNotificationsRead() {  const qc = useQueryClient();
   });
 }
 
-export function useClearNotifications() {
-  const qc = useQueryClient();
+export function useClearNotifications() {  const qc = useQueryClient();
   const { user } = useAuth();
   const toast = useToast();
   return useMutation({
@@ -113,6 +113,48 @@ export function useClearNotifications() {
     },
     onSettled: () => {
       if (user) invalidateNotifications(qc, user.id);
+    },
+  });
+}
+
+/**
+ * Chat unread signal WITHOUT new tables: group ids that have at least one
+ * unread new_message notification in the fetched inbox page. Derived from
+ * the existing list query (no extra network, updates live with it).
+ * Limitation: notifications older than the inbox page size can't raise a
+ * dot — acceptable for a subtle indicator, documented, no fake counts.
+ */
+export function useUnreadChatGroups(userId: string | undefined): Set<string> {
+  const { data } = useNotifications(userId);
+  return useMemo(() => {
+    const set = new Set<string>();
+    for (const n of data ?? []) {
+      if (n.type === 'new_message' && !n.read_at && n.group_id) set.add(n.group_id);
+    }
+    return set;
+  }, [data]);
+}
+
+/** Silently mark a group's message notifications read (e.g. on chat open).
+ *  No toast: opening the conversation IS the acknowledgement. */
+export function useMarkGroupChatRead() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: (groupId: string) => notificationsService.markGroupRead(user!.id, groupId),
+    onSuccess: (_d, groupId) => {
+      if (!user) return;
+      const list = qc.getQueryData<NotificationWithActor[]>(qk.notifications(user.id));
+      if (list) {
+        const now = new Date().toISOString();
+        qc.setQueryData<NotificationWithActor[]>(
+          qk.notifications(user.id),
+          list.map((n) =>
+            n.type === 'new_message' && n.group_id === groupId && !n.read_at ? { ...n, read_at: now } : n,
+          ),
+        );
+      }
+      qc.invalidateQueries({ queryKey: qk.unreadCount(user.id) });
     },
   });
 }
