@@ -74,7 +74,7 @@ export function Me() {
                   {g.member_count} MEMBERS · {g.my_role.toUpperCase()}
                 </small>
               </span>
-              <ArrowRight size={19} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />
+              <ArrowRight size={18} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />
             </button>
           ))}
         </div>
@@ -84,7 +84,7 @@ export function Me() {
         <span className="k">+ NEW</span>
         <h3 style={{ fontSize: 20 }}>Create or join another</h3>
         <span className="go">
-          <Plus size={19} />
+          <Plus size={20} />
         </span>
       </button>
       <Button variant="paper" size="block" onClick={() => navigate('/settings')} style={{ marginTop: 4 }}>

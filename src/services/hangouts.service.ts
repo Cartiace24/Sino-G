@@ -17,6 +17,21 @@ export function countResponses(
   return { down, maybe, unavailable, total: responses.length };
 }
 
+/** Live window after the proposed time before a hangout is considered passed. */
+export const HANGOUT_LIVE_HOURS = 6;
+
+function expiryFor(proposedTime: string | null | undefined): string | null {
+  if (!proposedTime) return null;
+  const at = new Date(proposedTime).getTime();
+  if (Number.isNaN(at)) return null;
+  return new Date(at + HANGOUT_LIVE_HOURS * 3_600_000).toISOString();
+}
+
+/** An active hangout whose live window elapsed — treated as passed in live lists. */
+export function isHangoutExpired(h: { status: string; expires_at: string | null }): boolean {
+  return h.expires_at != null && new Date(h.expires_at).getTime() <= Date.now();
+}
+
 export const hangoutsService = {
   async listForGroups(groupIds: string[], onlyActive = false): Promise<HangoutWithMeta[]> {
     if (groupIds.length === 0) return [];
@@ -28,7 +43,12 @@ export const hangoutsService = {
       .in('group_id', groupIds)
       .order('created_at', { ascending: false })
       .limit(30);
-    if (onlyActive) q = q.eq('status', 'active');
+    if (onlyActive) {
+      // Live lists skip passed hangouts (expired active rows read as closed).
+      q = q
+        .eq('status', 'active')
+        .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`);
+    }
     const { data, error } = await q;
     if (error) throw error;
     return ((data ?? []) as unknown as (HangoutWithMeta & { group: { name: string } | null })[]).map(
@@ -62,7 +82,8 @@ export const hangoutsService = {
         location_lat: input.location_lat ?? null,
         location_lng: input.location_lng ?? null,
         proposed_time: input.proposed_time ?? null,
-        expires_at: input.expires_at ?? null,
+        // Live window so stale hangouts fall out of live lists on their own.
+        expires_at: input.expires_at ?? expiryFor(input.proposed_time ?? null),
         status: 'active',
       })
       .select()
@@ -86,12 +107,17 @@ export const hangoutsService = {
   async updateHangout(hangoutId: string, patch: UpdateHangoutInput): Promise<void> {
     const dbPatch: {
       proposed_time?: string | null;
+      expires_at?: string | null;
       location?: string | null;
       location_lat?: number | null;
       location_lng?: number | null;
       message?: string | null;
     } = {};
-    if (patch.proposed_time !== undefined) dbPatch.proposed_time = patch.proposed_time;
+    if (patch.proposed_time !== undefined) {
+      dbPatch.proposed_time = patch.proposed_time;
+      // Moving the time moves the live window with it.
+      dbPatch.expires_at = expiryFor(patch.proposed_time);
+    }
     if (patch.location !== undefined) {
       const clean = patch.location?.trim() || null;
       dbPatch.location = clean;

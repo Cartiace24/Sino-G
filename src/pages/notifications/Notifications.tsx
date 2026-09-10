@@ -191,7 +191,7 @@ export function NotificationsPage() {
                     }}
                     style={{ marginLeft: 'auto', color: 'var(--muted)', display: 'grid', placeItems: 'center', padding: 6 }}
                   >
-                    <Check size={17} />
+                    <Check size={16} />
                   </span>
                 ) : (
                   <ChevronRight size={18} style={{ marginLeft: 'auto', color: 'var(--muted)', flexShrink: 0 }} />

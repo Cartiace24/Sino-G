@@ -56,6 +56,7 @@ export function NotificationBell() {
             display: 'grid',
             placeItems: 'center',
             letterSpacing: '.02em',
+            fontVariantNumeric: 'tabular-nums',
           }}
         >
           {badge}

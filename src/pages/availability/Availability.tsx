@@ -240,7 +240,7 @@ export function Availability() {
                   onClick={() => delMut.mutate(r.id)}
                   style={{ color: 'var(--muted)', display: 'grid', placeItems: 'center' }}
                 >
-                  <Trash2 size={17} />
+                  <Trash2 size={16} />
                 </button>
               </span>
             </div>

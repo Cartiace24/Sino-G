@@ -87,6 +87,9 @@ export function GroupChat() {
   const [draft, setDraft] = useState('');
   const loadedOnce = useRef(false);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  // Unseen arrivals while reading history (cleared on jump-to-latest).
+  const [newCount, setNewCount] = useState(0);
+  const lastLen = useRef(0);
 
   // Autogrow to ~4 rows, then scroll internally.
   useEffect(() => {
@@ -109,15 +112,30 @@ export function GroupChat() {
 
   // First paint lands at the newest message; afterwards follow new arrivals
   // only when already near the bottom (never yank a user reading history).
+  // Missed arrivals surface as a jump-to-latest pill instead.
   useEffect(() => {
     if (items.length === 0) return;
     const nearBottom =
       window.innerHeight + window.scrollY > document.documentElement.scrollHeight - 200;
-    if (!loadedOnce.current || nearBottom) {
+    if (!loadedOnce.current) {
       loadedOnce.current = true;
+      lastLen.current = items.length;
       scrollToBottom(false);
+      return;
+    }
+    if (nearBottom) {
+      lastLen.current = items.length;
+      setNewCount(0);
+    } else if (items.length > lastLen.current) {
+      setNewCount(items.length - lastLen.current);
     }
   }, [items.length]);
+
+  const jumpToLatest = () => {
+    lastLen.current = items.length;
+    setNewCount(0);
+    scrollToBottom(true);
+  };
 
   const submit = () => {
     const content = draft.trim();
@@ -148,8 +166,7 @@ export function GroupChat() {
     }
   };
 
-  const onDelete = async (m: MessageWithSender) => {
-    const ok = await confirm({
+  const onDelete = async (m: MessageWithSender) => {    const ok = await confirm({
       title: 'DELETE MESSAGE?',
       body: 'This can’t be undone.',
       confirmLabel: 'Delete',
@@ -276,6 +293,25 @@ export function GroupChat() {
         )}
       </div>
 
+      {newCount > 0 && (
+        <button
+          type="button"
+          className="btn btn-dark btn-sm"
+          onClick={jumpToLatest}
+          aria-live="polite"
+          style={{
+            position: 'fixed',
+            bottom: 208,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 30,
+            borderRadius: 999,
+            boxShadow: '0 8px 24px rgba(24,24,23,.25)',
+          }}
+        >
+          ↓ {newCount} new message{newCount === 1 ? '' : 's'}
+        </button>
+      )}
       <form
         onSubmit={onSubmit}
         style={{

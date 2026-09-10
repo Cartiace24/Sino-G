@@ -5,7 +5,7 @@ import { ArrowLeft, CalendarX, Clock, MapPin, MessageCircle, Pencil, Share2, Use
 import { useAuth } from '../../contexts/AuthContext';
 import { useHangoutDetail } from '../../hooks/useHangouts';
 import { useMyGroups } from '../../hooks/useGroups';
-import { countResponses, hangoutsService } from '../../services/hangouts.service';
+import { countResponses, hangoutsService, isHangoutExpired } from '../../services/hangouts.service';
 import { friendlyError } from '../../utils/errors';
 import { describeHangoutWhen } from '../../utils/time';
 import { googleMapsUrl } from '../../utils/maps';
@@ -103,7 +103,18 @@ export function HangoutDetail() {
 
   // Edit-details draft (date/time/location only — title stays fixed in V1).
   const [editing, setEditing] = useState(false);
-  const [eDate, setEDate] = useState('');
+  // Sticky vote bar: appears once the in-flow buttons scroll out of view.
+  const respondRef = useRef<HTMLDivElement>(null);
+  const [respondStuck, setRespondStuck] = useState(false);
+  useEffect(() => {
+    const el = respondRef.current;
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const obs = new IntersectionObserver(([entry]) => setRespondStuck(!entry.isIntersecting), {
+      threshold: 0,
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);  const [eDate, setEDate] = useState('');
   const [eTime, setETime] = useState('');
   const [eWhere, setEWhere] = useState('');
   const [ePin, setEPin] = useState<PinnedLocation | null>(null);
@@ -231,6 +242,7 @@ export function HangoutDetail() {
   const down = responses.filter((r) => r.response === 'down');
   const maybe = responses.filter((r) => r.response === 'maybe');
   const cant = responses.filter((r) => r.response === 'unavailable');
+  const passed = h.status === 'active' && isHangoutExpired(h);
   // Exact pin when present, readable-name search for legacy text rows.
   const mapsUrl = googleMapsUrl(h.location, h.location_lat ?? null, h.location_lng ?? null);
 
@@ -264,14 +276,14 @@ export function HangoutDetail() {
         </div>
       </div>
 
-      {h.status === 'active' ? (
+      {h.status === 'active' && !passed ? (
         <>
           <h2 className="display md">
             ARE YOU
             <br />
             DOWN?
           </h2>
-          <div className="respond" style={{ marginTop: 12 }}>
+          <div className="respond" ref={respondRef} style={{ marginTop: 12 }}>
             {OPTIONS.map((o) => (
               <button
                 key={o.value}
@@ -285,7 +297,9 @@ export function HangoutDetail() {
           </div>
         </>
       ) : (
-        <p className="small muted">This hangout is {h.status}. Catch the next one.</p>
+        <p className="small muted">
+          {passed ? 'This hangout has passed. Catch the next one.' : `This hangout is ${h.status}. Catch the next one.`}
+        </p>
       )}
 
       <hr className="rule" />
@@ -348,7 +362,7 @@ export function HangoutDetail() {
       </div>
 
       <div style={{ display: 'flex', gap: 10, marginTop: 18, flexWrap: 'wrap' }}>
-        {h.status === 'active' && (
+        {h.status === 'active' && !passed && (
           <Button variant="line" size="block" onClick={onNudge} disabled={nudgeMut.isPending}>
             <Share2 size={16} /> {nudgeMut.isPending ? 'Nudging…' : "Nudge the GC"}
           </Button>
@@ -435,6 +449,37 @@ export function HangoutDetail() {
             }}
           />
         </Suspense>
+      )}
+      {h.status === 'active' && !passed && respondStuck && (
+        <div
+          role="group"
+          aria-label="Respond to this hangout"
+          style={{
+            position: 'sticky',
+            bottom: 84,
+            marginTop: 12,
+            background: 'var(--paper)',
+            border: '1.5px solid var(--ink)',
+            borderRadius: 14,
+            padding: 10,
+            display: 'flex',
+            gap: 8,
+          }}
+        >
+          {OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              aria-pressed={myResp === o.value}
+              className={`rbtn ${o.cls}${myResp === o.value ? ' picked' : ''}`}
+              style={{ minHeight: 48, flex: 1, fontSize: 13 }}
+              onClick={() => respondMut.mutate(o.value)}
+              disabled={respondMut.isPending}
+            >
+              {o.value === 'down' ? 'DOWN' : o.value === 'maybe' ? 'MAYBE' : "CAN'T"}
+            </button>
+          ))}
+        </div>
       )}
     </>
   );

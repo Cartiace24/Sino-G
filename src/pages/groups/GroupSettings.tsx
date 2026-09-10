@@ -369,7 +369,7 @@ export function GroupSettings() {
             className="setrow"
             onClick={() => copyText(group.invite_code, `Join ${group.name} on Sino G! Code: ${group.invite_code}`)}
           >
-            <Copy size={17} />
+            <Copy size={16} />
             <span>
               Main code · <b style={{ fontFamily: 'var(--font-d)', letterSpacing: '.08em' }}>{group.invite_code}</b>
               <br />

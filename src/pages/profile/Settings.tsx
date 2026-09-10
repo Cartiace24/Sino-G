@@ -150,7 +150,7 @@ export function Settings() {
             pwMut.mutate();
           }}
         >
-          <Lock size={19} /> Change password <ChevronRight size={17} className="chev" />
+          <Lock size={20} /> Change password <ChevronRight size={16} className="chev" />
         </button>
       </div>
 
@@ -164,7 +164,7 @@ export function Settings() {
           aria-label="Dark mode"
           onClick={toggleTheme}
         >
-          <Moon size={19} /> Dark mode
+          <Moon size={20} /> Dark mode
           <span className="switch" aria-hidden="true" />
         </button>
         <button
@@ -175,7 +175,7 @@ export function Settings() {
           aria-label="Notifications"
           onClick={toggleNotif}
         >
-          <Bell size={19} /> Notifications
+          <Bell size={20} /> Notifications
           <span className="switch" aria-hidden="true" />
         </button>
         <button
@@ -186,7 +186,7 @@ export function Settings() {
           aria-label="Hangout alerts"
           onClick={toggleAlerts}
         >
-          <Zap size={19} /> Hangout alerts
+          <Zap size={20} /> Hangout alerts
           <span className="switch" aria-hidden="true" />
         </button>
         <p className="small muted" style={{ padding: '8px 2px' }}>
@@ -211,7 +211,7 @@ export function Settings() {
           }}
           disabled={delMut.isPending}
         >
-          <Trash2 size={19} /> {delMut.isPending ? 'Deleting…' : 'Delete account'}
+          <Trash2 size={20} /> {delMut.isPending ? 'Deleting…' : 'Delete account'}
         </button>
         <button
           className="setrow"
@@ -220,7 +220,7 @@ export function Settings() {
             navigate('/', { replace: true });
           }}
         >
-          <LogOut size={19} /> Log out
+          <LogOut size={20} /> Log out
         </button>
       </div>
       <p className="small muted" style={{ textAlign: 'center', marginTop: 10 }}>

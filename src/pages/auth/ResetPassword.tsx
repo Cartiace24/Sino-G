@@ -6,7 +6,7 @@ import { friendlyError } from '../../utils/errors';
 import { useToast } from '../../components/common/Toast';
 import { LoadingRows } from '../../components/common/Feedback';
 import { Button } from '../../components/ui/button';
-import { FieldError, Input, Label, PasswordInput } from '../../components/ui/input';
+import { FieldError, Label, PasswordInput } from '../../components/ui/input';
 
 export function ResetPassword() {
   const { user, loading, isRecoverySession, signOut } = useAuth();

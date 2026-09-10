@@ -48,27 +48,27 @@ export function AppShell() {
         </div>
         <nav className="side-nav">
           <NavLink to="/today" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <Sun size={19} />
+            <Sun size={20} />
             <span>TODAY</span>
           </NavLink>
           <NavLink to="/plan" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <CalendarDays size={19} />
+            <CalendarDays size={20} />
             <span>PLAN</span>
           </NavLink>
           <NavLink to="/g" className={({ isActive }) => cn('side-g', isActive && 'active')}>
-            <Zap size={19} />
+            <Zap size={20} />
             <span>WHO&apos;S DOWN</span>
           </NavLink>
           <NavLink to="/groups" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <Users size={19} />
+            <Users size={20} />
             <span>GROUPS</span>
           </NavLink>
           <NavLink to="/availability" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <Clock size={19} />
+            <Clock size={20} />
             <span>FREE?</span>
           </NavLink>
           <NavLink to="/me" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <User size={19} />
+            <User size={20} />
             <span>ME</span>
           </NavLink>
         </nav>
@@ -115,7 +115,7 @@ export function AppShell() {
             {profile?.avatar_url ? (
               <img src={profile.avatar_url} alt="" className="avatar" style={{ objectFit: 'cover' }} />
             ) : (
-              <span className="avatar av-isaiah">{initial}</span>
+              <span className="avatar av-a">{initial}</span>
             )}
             <span>
               <strong>{profile?.display_name ?? 'You'}</strong>
@@ -135,7 +135,7 @@ export function AppShell() {
           </Link>
           <NotificationBell />
           <button
-            className="topbar-avatar avatar av-isaiah"
+            className="topbar-avatar avatar av-a"
             onClick={() => navigate('/me')}
             aria-label="Profile"
             style={profile?.avatar_url ? { overflow: 'hidden', padding: 0 } : undefined}
@@ -154,22 +154,22 @@ export function AppShell() {
 
         <nav className="tabbar" aria-label="Primary mobile">
           <NavLink to="/today" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <Sun size={21} />
+            <Sun size={20} />
             <span>TODAY</span>
           </NavLink>
           <NavLink to="/plan" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <CalendarDays size={21} />
+            <CalendarDays size={20} />
             <span>PLAN</span>
           </NavLink>
           <NavLink to="/g" className={({ isActive }) => cn(isActive && 'active', 'tab-g')}>
             <em>G?</em>
           </NavLink>
           <NavLink to="/availability" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <Clock size={21} />
+            <Clock size={20} />
             <span>FREE?</span>
           </NavLink>
           <NavLink to="/me" className={({ isActive }) => (isActive ? 'active' : '')}>
-            <User size={21} />
+            <User size={20} />
             <span>ME</span>
           </NavLink>
         </nav>

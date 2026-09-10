@@ -64,7 +64,7 @@ export function Groups() {
                   {g.member_count} MEMBERS · {g.my_role.toUpperCase()}
                 </span>
               </span>
-              <ArrowRight size={19} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />
+              <ArrowRight size={18} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />
             </button>
           ))}
         </div>
@@ -74,7 +74,7 @@ export function Groups() {
         <span className="k">+ NEW</span>
         <h3 style={{ fontSize: 20 }}>Create or join another</h3>
         <span className="go">
-          <Plus size={19} />
+          <Plus size={20} />
         </span>
       </button>
     </>

@@ -100,6 +100,38 @@ export function Today() {
   const bestList = bestQ.data ?? [];
   const topBest = bestList[0] ?? null;
 
+  const freeCount = tonight.summary.freeTonight.length;
+  const hangouts = hangoutsQ.data ?? [];
+  const imFreeTonight = user ? tonight.summary.freeTonight.includes(user.id) : false;
+
+  // One-tap activation: tonight 6–10 PM free, no form. Overlapping saves are
+  // legal (busy wins a slot), so this never corrupts existing windows.
+  // (Hooks live above the early returns — never call hooks conditionally.)
+  const [taraPending, setTaraPending] = useState(false);
+  const qc = useQueryClient();
+  const toast = useToast();
+  const onTaraTonight = async () => {
+    if (!user || taraPending || imFreeTonight) return;
+    setTaraPending(true);
+    try {
+      await availabilityService.save(user.id, {
+        date: today,
+        start_time: '18:00',
+        end_time: '22:00',
+        status: 'free',
+      });
+      qc.invalidateQueries({ queryKey: ['my-availability'] });
+      qc.invalidateQueries({ queryKey: qk.groupAvailabilityAll() });
+      qc.invalidateQueries({ queryKey: qk.tonightForUser(user.id) });
+      qc.invalidateQueries({ queryKey: qk.bestUpcoming() });
+      toast("<b>You're in for tonight.</b> The barkada can see it.");
+    } catch (err) {
+      toast(friendlyError(err, 'Could not save that. Try again.'));
+    } finally {
+      setTaraPending(false);
+    }
+  };
+
   if (groupsQ.isLoading) return <LoadingRows rows={6} />;
   if (groupsQ.isError) {
     return (
@@ -145,37 +177,6 @@ export function Today() {
       </div>
     );
   }
-
-  const freeCount = tonight.summary.freeTonight.length;
-  const hangouts = hangoutsQ.data ?? [];
-  const imFreeTonight = user ? tonight.summary.freeTonight.includes(user.id) : false;
-
-  // One-tap activation: tonight 6–10 PM free, no form. Overlapping saves are
-  // legal (busy wins a slot), so this never corrupts existing windows.
-  const [taraPending, setTaraPending] = useState(false);
-  const qc = useQueryClient();
-  const toast = useToast();
-  const onTaraTonight = async () => {
-    if (!user || taraPending || imFreeTonight) return;
-    setTaraPending(true);
-    try {
-      await availabilityService.save(user.id, {
-        date: today,
-        start_time: '18:00',
-        end_time: '22:00',
-        status: 'free',
-      });
-      qc.invalidateQueries({ queryKey: ['my-availability'] });
-      qc.invalidateQueries({ queryKey: qk.groupAvailabilityAll() });
-      qc.invalidateQueries({ queryKey: qk.tonightForUser(user.id) });
-      qc.invalidateQueries({ queryKey: qk.bestUpcoming() });
-      toast("<b>You're in for tonight.</b> The barkada can see it.");
-    } catch (err) {
-      toast(friendlyError(err, 'Could not save that. Try again.'));
-    } finally {
-      setTaraPending(false);
-    }
-  };
 
   return (
     <>
@@ -452,7 +453,7 @@ export function Today() {
                 {g.member_count} MEMBERS · {g.my_role.toUpperCase()}
               </span>
             </span>
-            <ArrowRight size={19} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />
+            <ArrowRight size={18} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />
           </button>
         ))}
       </div>

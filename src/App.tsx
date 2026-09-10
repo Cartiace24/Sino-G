@@ -80,6 +80,11 @@ function AppRoutes() {
   // boundary can never trap the app permanently.
   const { pathname } = useLocation();
   useRouteTitle(pathname);
+  // BrowserRouter keeps scroll across navigations — reset so every screen
+  // starts at the top (in-page anchors are the only exception, unused here).
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
   return (
     <ErrorBoundary resetKey={pathname}>
       <Suspense fallback={<LoadingRows rows={5} />}>

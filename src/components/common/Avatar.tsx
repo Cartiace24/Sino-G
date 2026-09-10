@@ -1,15 +1,7 @@
 import { cn } from '../../lib/utils';
 
-const PALETTE = [
-  'av-isaiah',
-  'av-john',
-  'av-mark',
-  'av-carlo',
-  'av-kevin',
-  'av-mika',
-  'av-angelo',
-  'av-rafa',
-];
+/** Hash-assigned flat palette (light fills + ink initial — readable in both themes). */
+const PALETTE = ['av-a', 'av-b', 'av-c', 'av-d', 'av-e', 'av-f', 'av-g', 'av-h'];
 
 function colorFor(name: string): string {
   let h = 0;

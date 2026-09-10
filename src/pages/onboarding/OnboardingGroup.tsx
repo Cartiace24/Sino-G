@@ -97,7 +97,7 @@ export function OnboardingGroup() {
             <h3>Create a group</h3>
             <p>Start your own barkada. Invite them in seconds.</p>
             <span className="go">
-              <Plus size={19} />
+              <Plus size={20} />
             </span>
           </button>
           <button className="choice" onClick={() => setMode('join')}>
@@ -105,7 +105,7 @@ export function OnboardingGroup() {
             <h3>Join a group</h3>
             <p>Enter the invite code from your friends.</p>
             <span className="go">
-              <ArrowRight size={19} />
+              <ArrowRight size={20} />
             </span>
           </button>
           <p className="small muted" style={{ textAlign: 'center', marginTop: 6 }}>
