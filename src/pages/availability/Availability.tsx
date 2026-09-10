@@ -122,9 +122,10 @@ export function Availability() {
       <p className="kicker" style={{ marginTop: 14 }}>
         TAKES ~20 SECONDS
       </p>
-      <h1 className="display lg">
-        MY<br />
-        AVAIL<span style={{ background: 'var(--green)', borderRadius: 6, padding: '0 .1em' }}>ABILITY.</span>
+      <h1 className="display lg fit">
+        MY
+        <br />
+        <span className="accent-flat">AVAILABILITY.</span>
       </h1>
 
       <div className="weekstrip" style={{ gridTemplateColumns: 'repeat(7, 1fr)' }}>

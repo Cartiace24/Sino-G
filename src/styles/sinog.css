@@ -122,6 +122,10 @@ body.auth .topbar,body.auth .tabbar,body.auth .sidebar{display:none !important}
 .display.lg{font-size:clamp(34px,6.5vw,56px)}
 .display.md{font-size:clamp(26px,5vw,36px)}
 .display .accent{background:var(--green);padding:0 .12em;border-radius:6px;display:inline-block;transform:rotate(-1.2deg)}
+/* Flat highlight (no tilt) for single-word lockups. */
+.display .accent-flat{background:var(--green);padding:0 .12em;border-radius:6px;display:inline-block}
+/* Long words (e.g. AVAILABILITY.) that can't fit the 34px lg minimum on 320px screens. */
+.display.fit{font-size:clamp(28px,8.5vw,56px)}
 .lede{font-size:16px;color:var(--ink-2);max-width:34ch}
 .bignum{font-family:var(--font-d);font-weight:900;font-size:clamp(72px,18vw,120px);line-height:.9;letter-spacing:-.04em}
 .rule{height:1px;background:var(--line);border:0;margin:22px 0}
@@ -492,6 +496,7 @@ textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
 [data-theme="dark"] .seg.on-maybe,
 [data-theme="dark"] .seg.on-busy,
 [data-theme="dark"] .display .accent,
+[data-theme="dark"] .display .accent-flat,
 [data-theme="dark"] .welcome-giant span{color:#181817}
 /* Selected controls keep light text off dark ink pills. */
 [data-theme="dark"] .side-nav a.active,
