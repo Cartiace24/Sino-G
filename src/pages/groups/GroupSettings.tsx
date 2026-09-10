@@ -116,8 +116,13 @@ export function GroupSettings() {
   const avatarMut = useMutation({
     mutationFn: async () => {
       if (!draft || !group) throw new Error('Pick a photo first.');
+      const prevAvatar = group.avatar_url ?? null;
       const url = await storageService.uploadGroupAvatar(group.id, draft);
-      return groupsService.update(group.id, { avatar_url: url });
+      const updated = await groupsService.update(group.id, { avatar_url: url });
+      if (prevAvatar && prevAvatar !== url) {
+        void storageService.deleteGroupAvatarByUrl(prevAvatar);
+      }
+      return updated;
     },
     onSuccess: () => {
       setAvatarError(null);

@@ -67,8 +67,8 @@ export function useTonight(userId: string | undefined, groupIds: string[], date:
   const membersQ = useQuery({
     queryKey:
       userId && groupIds.length > 0
-        ? (['tonight-members', userId, ...[...groupIds].sort()] as unknown as readonly unknown[])
-        : ['tonight-members', 'none'],
+        ? ([...qk.tonightMembers(), userId, ...[...groupIds].sort()] as unknown as readonly unknown[])
+        : [...qk.tonightMembers(), 'none'],
     queryFn: async () => {
       const lists = await Promise.all(groupIds.map((g) => groupsService.members(g)));
       const seen = new Map<string, { user_id: string; display_name: string; avatar_url: string | null }>();

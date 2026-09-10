@@ -9,8 +9,9 @@ import { useMyHangouts, useRealtimeHangouts } from '../../hooks/useHangouts';
 import { groupsService } from '../../services/groups.service';
 import { availabilityService } from '../../services/availability.service';
 import { calculateGroupAvailability, findBestSlot } from '../../utils/availability-calculator';
+import { qk } from '../../lib/queryClient';
 import { Avatar, AvatarStack } from '../../components/common/Avatar';
-import { EmptyState, LoadingRows } from '../../components/common/Feedback';
+import { EmptyState, ErrorState, LoadingRows } from '../../components/common/Feedback';
 import { Button } from '../../components/ui/button';
 
 function greeting(): string {
@@ -39,7 +40,7 @@ export function Today() {
 
   // Best upcoming window across the first group, next 3 days.
   const bestQ = useQuery({
-    queryKey: ['best-upcoming', groups[0]?.id ?? 'none', today],
+    queryKey: [...qk.bestUpcoming(), groups[0]?.id ?? 'none', today],
     queryFn: async () => {
       const gid = groups[0]!.id;
       const members = await groupsService.members(gid);
@@ -68,6 +69,24 @@ export function Today() {
   });
 
   if (groupsQ.isLoading) return <LoadingRows rows={6} />;
+  if (groupsQ.isError) {
+    return (
+      <div style={{ paddingTop: 30 }}>
+        <p className="kicker">{greeting()}, {firstName}.</p>
+        <h1 className="display xl">
+          WHO&apos;S
+          <br />
+          FREE <span className="accent">TODAY?</span>
+        </h1>
+        <div style={{ height: 18 }} />
+        <ErrorState
+          title="Couldn't load your groups."
+          body="Check your connection and try again."
+          onRetry={() => groupsQ.refetch()}
+        />
+      </div>
+    );
+  }
 
   if (groups.length === 0) {
     return (
@@ -174,7 +193,17 @@ export function Today() {
         <div>
           <div className="besthero">
             <span className="kicker">★ BEST UPCOMING WINDOW</span>
-            {bestQ.data ? (
+            {bestQ.isError ? (
+              <>
+                <h3>Couldn&apos;t load.</h3>
+                <p>Check your connection and try again.</p>
+                <div style={{ marginTop: 12 }}>
+                  <button className="btn btn-green btn-sm" onClick={() => bestQ.refetch()}>
+                    Retry
+                  </button>
+                </div>
+              </>
+            ) : bestQ.data ? (
               <>
                 <h3>
                   {bestQ.data.date === today ? 'Today' : bestQ.data.date} looks good.
@@ -244,6 +273,14 @@ export function Today() {
       </div>
       {hangoutsQ.isLoading ? (
         <LoadingRows rows={2} />
+      ) : hangoutsQ.isError ? (
+        <div style={{ marginTop: 10 }}>
+          <ErrorState
+            title="Couldn't load hangouts."
+            body="Check your connection and try again."
+            onRetry={() => hangoutsQ.refetch()}
+          />
+        </div>
       ) : hangouts.length === 0 ? (
         <div style={{ marginTop: 10 }}>
           <EmptyState

@@ -52,9 +52,9 @@ export function Availability() {
   const invalidate = () => {
     if (!user) return;
     qc.invalidateQueries({ queryKey: qk.myAvailability(user.id, fromISO, toISO) });
-    qc.invalidateQueries({ queryKey: ['group-availability'] });
-    qc.invalidateQueries({ queryKey: ['tonight', user.id] });
-    qc.invalidateQueries({ queryKey: ['best-upcoming'] });
+    qc.invalidateQueries({ queryKey: qk.groupAvailabilityAll() });
+    qc.invalidateQueries({ queryKey: qk.tonightForUser(user.id) });
+    qc.invalidateQueries({ queryKey: qk.bestUpcoming() });
   };
 
   const saveMut = useMutation({

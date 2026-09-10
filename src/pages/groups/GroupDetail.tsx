@@ -65,8 +65,8 @@ export function GroupDetail() {
   const invalidateMembership = () => {
     qc.invalidateQueries({ queryKey: qk.groupMembers(groupId!) });
     qc.invalidateQueries({ queryKey: qk.group(groupId!) });
-    qc.invalidateQueries({ queryKey: ['groups'] });
-    qc.invalidateQueries({ queryKey: ['tonight-members'] });
+    qc.invalidateQueries({ queryKey: qk.groupsAll() });
+    qc.invalidateQueries({ queryKey: qk.tonightMembers() });
   };
 
   const leaveMut = useMutation({

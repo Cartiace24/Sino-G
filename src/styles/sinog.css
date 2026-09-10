@@ -341,10 +341,13 @@ textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
 .skel{border-radius:10px;background:linear-gradient(90deg,var(--bg-deep) 25%,#f3f0e8 50%,var(--bg-deep) 75%);
   background-size:200% 100%;animation:sk 1.2s infinite;height:16px}
 @keyframes sk{to{background-position:-200% 0}}
-.toast{position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;
+.toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top));bottom:auto;
+  transform:translateX(-50%) translateY(-16px);background:var(--ink);color:#fff;
   padding:13px 20px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;
   transition:all .25s ease;z-index:100;max-width:calc(100vw - 40px);text-align:center}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+/* Desktop: no tabbar/sticky-save collision — dock bottom-right of the column. */
+@media(min-width:960px){.toast{top:auto;bottom:32px;transform:translateX(-50%) translateY(20px)}}
 .toast b{color:var(--green)}
 .setgroup{margin-bottom:26px}
 .setgroup .kicker{display:block;margin-bottom:4px}
@@ -447,11 +450,11 @@ textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
   --paper:#201f1c;
   --ink:#F4F1E8;
   --ink-2:#c9c6bb;
-  --muted:#9a978b;
+  --muted:#a8a59a;
   --line:#33332e;
   --line-soft:#2a2a26;
   --green-deep:#B6D83B;
-  --green-wash:#2b3313;
+  --green-wash:#343d1a;
   --free:#93d43a;
   --maybe:#f0a832;
   --busy:#f06666;

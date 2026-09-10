@@ -36,7 +36,7 @@ export function useRealtimeHangouts(groupIds: string[]) {
           if (id) qc.invalidateQueries({ queryKey: qk.hangoutResponses(id) });
           // The G? list's per-hangout down-counts derive from responses —
           // without this they stay frozen after first load.
-          qc.invalidateQueries({ queryKey: ['hangout-counts'] });
+          qc.invalidateQueries({ queryKey: qk.hangoutCounts() });
         },
       )
       .subscribe();
@@ -58,7 +58,7 @@ export function useRealtimeAvailability(groupId: string | undefined) {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'availability' },
         () => {
-          qc.invalidateQueries({ queryKey: ['group-availability', groupId] });
+          qc.invalidateQueries({ queryKey: qk.groupAvailabilityForGroup(groupId) });
         },
       )
       .subscribe();

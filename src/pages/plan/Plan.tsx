@@ -11,7 +11,7 @@ import {
 } from '../../components/common/CalendarDropdown';
 import { useRealtimeAvailability } from '../../hooks/useHangouts';
 import { AvatarStack } from '../../components/common/Avatar';
-import { EmptyState, LoadingRows } from '../../components/common/Feedback';
+import { EmptyState, ErrorState, LoadingRows } from '../../components/common/Feedback';
 import { Button } from '../../components/ui/button';
 import { FieldError, Input, Label } from '../../components/ui/input';
 
@@ -91,6 +91,19 @@ export function Plan() {
   }, [membersQ.data]);
 
   if (groupsQ.isLoading) return <LoadingRows rows={5} />;
+  if (groupsQ.isError) {
+    return (
+      <div style={{ paddingTop: 30 }}>
+        <h1 className="display lg">PLAN.</h1>
+        <div style={{ height: 16 }} />
+        <ErrorState
+          title="Couldn't load your groups."
+          body="Check your connection and try again."
+          onRetry={() => groupsQ.refetch()}
+        />
+      </div>
+    );
+  }
   if (groups.length === 0) {
     return (
       <div style={{ paddingTop: 30 }}>
@@ -225,7 +238,18 @@ export function Plan() {
         )}
       </div>
 
-      {rowsQ.isLoading || membersQ.isLoading ? (
+      {rowsQ.isError || membersQ.isError ? (
+        <div className="sec">
+          <ErrorState
+            title="Couldn't load availability."
+            body="Check your connection and try again."
+            onRetry={() => {
+              membersQ.refetch();
+              rowsQ.refetch();
+            }}
+          />
+        </div>
+      ) : rowsQ.isLoading || membersQ.isLoading ? (
         <LoadingRows rows={5} />
       ) : best ? (
         <>

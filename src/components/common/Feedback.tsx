@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Button } from '../ui/button';
 
 export function EmptyState({
   icon,
@@ -36,6 +37,33 @@ export function LoadingRows({ rows = 4 }: { rows?: number }) {
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+export function ErrorState({
+  title = "Couldn't load that.",
+  body = 'Check your connection and try again.',
+  onRetry,
+}: {
+  title?: string;
+  body?: string;
+  onRetry?: () => void;
+}) {
+  return (
+    <div className="empty" role="alert">
+      <p className="small">
+        <b style={{ color: 'var(--ink)' }}>{title}</b>
+        <br />
+        {body}
+      </p>
+      {onRetry && (
+        <div style={{ marginTop: 12 }}>
+          <Button variant="line" size="sm" onClick={onRetry}>
+            Retry
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

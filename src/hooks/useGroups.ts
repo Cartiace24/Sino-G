@@ -34,9 +34,9 @@ function invalidateGroupCaches(qc: ReturnType<typeof useQueryClient>, groupId: s
   qc.invalidateQueries({ queryKey: qk.groupMembers(groupId) });
   qc.invalidateQueries({ queryKey: qk.group(groupId) });
   // My-groups lists (member counts, visibility) on Today / Groups / Me.
-  qc.invalidateQueries({ queryKey: ['groups'] });
+  qc.invalidateQueries({ queryKey: qk.groupsAll() });
   // Tonight's member set derives from group membership.
-  qc.invalidateQueries({ queryKey: ['tonight-members'] });
+  qc.invalidateQueries({ queryKey: qk.tonightMembers() });
 }
 
 /**
@@ -90,9 +90,9 @@ export function useRealtimeGroupsList() {
           const row = (payload.new ?? payload.old ?? {}) as { group_id?: string };
           if (row.group_id) invalidateGroupCaches(qc, row.group_id);
           else {
-            qc.invalidateQueries({ queryKey: ['groups'] });
-            qc.invalidateQueries({ queryKey: ['group-members'] });
-            qc.invalidateQueries({ queryKey: ['tonight-members'] });
+            qc.invalidateQueries({ queryKey: qk.groupsAll() });
+            qc.invalidateQueries({ queryKey: qk.groupMembersAll() });
+            qc.invalidateQueries({ queryKey: qk.tonightMembers() });
           }
         },
       )
@@ -100,8 +100,8 @@ export function useRealtimeGroupsList() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'groups' },
         () => {
-          qc.invalidateQueries({ queryKey: ['groups'] });
-          qc.invalidateQueries({ queryKey: ['group'] });
+          qc.invalidateQueries({ queryKey: qk.groupsAll() });
+          qc.invalidateQueries({ queryKey: qk.groupAll() });
         },
       )
       .subscribe();

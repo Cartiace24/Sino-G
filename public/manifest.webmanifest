@@ -1,0 +1,24 @@
+{
+  "name": "Sino G — See who's free",
+  "short_name": "Sino G",
+  "description": "Stop asking the group chat. See who's free.",
+  "start_url": "/today",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F5F3EE",
+  "theme_color": "#181817",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

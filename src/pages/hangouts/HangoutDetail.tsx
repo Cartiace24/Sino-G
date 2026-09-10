@@ -115,7 +115,7 @@ export function HangoutDetail() {
       qc.invalidateQueries({ queryKey: qk.hangout(hangoutId!) });
       if (h) {
         qc.invalidateQueries({ queryKey: qk.hangouts(h.group_id) });
-        qc.invalidateQueries({ queryKey: ['hangout-counts'] });
+        qc.invalidateQueries({ queryKey: qk.hangoutCounts() });
       }
       if (user) qc.invalidateQueries({ queryKey: qk.myHangouts(user.id) });
       if (alertsOn) toast('<b>Saved.</b> The group will be notified of any changes.');
@@ -163,7 +163,7 @@ export function HangoutDetail() {
       // Otherwise the closed hangout lingers in the G? and Today lists.
       if (h) {
         qc.invalidateQueries({ queryKey: qk.hangouts(h.group_id) });
-        qc.invalidateQueries({ queryKey: ['hangout-counts'] });
+        qc.invalidateQueries({ queryKey: qk.hangoutCounts() });
       }
       if (user) qc.invalidateQueries({ queryKey: qk.myHangouts(user.id) });
       if (alertsOn) toast(status === 'closed' ? 'Hangout closed. Have fun.' : 'Hangout cancelled.');

@@ -48,13 +48,20 @@ export function Settings() {
   const saveMut = useMutation({
     mutationFn: async () => {
       const f = fileRef.current?.files?.[0];
-      let avatarUrl = profile?.avatar_url ?? null;
+      const prevAvatar = profile?.avatar_url ?? null;
+      let avatarUrl = prevAvatar;
       if (f && user) avatarUrl = await storageService.uploadProfileAvatar(user.id, f);
-      return profilesService.updateProfile(user!.id, {
+      const updated = await profilesService.updateProfile(user!.id, {
         display_name: displayName.trim(),
         username: username.trim(),
         avatar_url: avatarUrl ?? undefined,
       });
+      // Row update won — now the old file is an orphan. Best-effort, never fails the save.
+      if (prevAvatar && avatarUrl && prevAvatar !== avatarUrl) {
+        void storageService.deleteProfileAvatarByUrl(prevAvatar);
+      }
+      if (fileRef.current) fileRef.current.value = '';
+      return updated;
     },
     onSuccess: async () => {
       setError(null);

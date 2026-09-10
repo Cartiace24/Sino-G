@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { CalendarDays, Clock, MessageCircle, Sun, User, Zap } from 'lucide-react';
+import { CalendarDays, Clock, MessageCircle, Sun, User, Users, Zap } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups } from '../../hooks/useGroups';
 import { useRealtimeNotifications, useUnreadChatGroups } from '../../hooks/useNotifications';
@@ -57,8 +57,15 @@ export function AppShell() {
           </NavLink>
           <NavLink to="/g" className={({ isActive }) => cn('side-g', isActive && 'active')}>
             <Zap size={19} />
-            <span>WHO'S DOWN</span>
-            <b className="live-dot" />
+            <span>WHO&apos;S DOWN</span>
+          </NavLink>
+          <NavLink to="/groups" className={({ isActive }) => (isActive ? 'active' : '')}>
+            <Users size={19} />
+            <span>GROUPS</span>
+          </NavLink>
+          <NavLink to="/availability" className={({ isActive }) => (isActive ? 'active' : '')}>
+            <Clock size={19} />
+            <span>FREE?</span>
           </NavLink>
           <NavLink to="/me" className={({ isActive }) => (isActive ? 'active' : '')}>
             <User size={19} />
@@ -123,7 +130,9 @@ export function AppShell() {
           <Link className="topbar-brand" to="/today">
             SINO&nbsp;G?
           </Link>
-          <Link className="topbar-group" to="/groups">SINO G ▾</Link>
+          <Link className="topbar-group" to="/groups" aria-label="Your groups">
+            GROUPS ▾
+          </Link>
           <NotificationBell />
           <button
             className="topbar-avatar avatar av-isaiah"

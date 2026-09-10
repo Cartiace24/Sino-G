@@ -113,7 +113,7 @@ export function Hangouts() {
 
   // Per-group live counts (one batched query for the visible list, not N).
   const countsQ = useQuery({
-    queryKey: ['hangout-counts', (hangoutsQ.data ?? []).map((h) => h.id).join(',')],
+    queryKey: [...qk.hangoutCounts(), (hangoutsQ.data ?? []).map((h) => h.id).join(',')],
     queryFn: () => hangoutsService.countDownsFor(hangoutsQ.data ?? []),
     enabled: (hangoutsQ.data?.length ?? 0) > 0,
     staleTime: 10_000,

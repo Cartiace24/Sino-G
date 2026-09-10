@@ -80,12 +80,17 @@ export function GroupChat() {
 
   const submit = () => {
     const content = draft.trim();
+    // isPending guard doubles as send debounce (no double-tap duplicates).
     if (!content || sendMut.isPending) return;
+    // Clear immediately — the optimistic row is already in the list.
+    // A failed send restores the text so nothing is lost.
+    setDraft('');
     sendMut.mutate(content, {
       onSuccess: () => {
-        // Clear only on success so a failed send keeps its text.
-        setDraft('');
         window.setTimeout(() => scrollToBottom(true), 60);
+      },
+      onError: () => {
+        setDraft(content);
       },
     });
   };

@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Plus } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups, useRealtimeGroupsList } from '../../hooks/useGroups';
-import { EmptyState, LoadingRows } from '../../components/common/Feedback';
+import { EmptyState, ErrorState, LoadingRows } from '../../components/common/Feedback';
 import { Button } from '../../components/ui/button';
 
 export function Groups() {
@@ -26,6 +26,14 @@ export function Groups() {
 
       {groupsQ.isLoading ? (
         <LoadingRows rows={4} />
+      ) : groupsQ.isError ? (
+        <div style={{ marginTop: 16 }}>
+          <ErrorState
+            title="Couldn't load your groups."
+            body="Check your connection and try again."
+            onRetry={() => groupsQ.refetch()}
+          />
+        </div>
       ) : groups.length === 0 ? (
         <div style={{ marginTop: 16 }}>
           <EmptyState
