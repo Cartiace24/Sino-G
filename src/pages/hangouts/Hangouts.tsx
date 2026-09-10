@@ -1,7 +1,7 @@
 import { Suspense, lazy, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChevronRight, MapPin, Moon } from 'lucide-react';
+import { ArrowRight, ChevronRight, MapPin, Moon } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups } from '../../hooks/useGroups';
 import { useMyHangouts, useRealtimeHangouts } from '../../hooks/useHangouts';
@@ -216,7 +216,11 @@ export function Hangouts() {
           <form className="sheet" onSubmit={onAsk}>
           <span className="kicker">NEW HANGOUT · ~15 SECONDS</span>
           <div className="field" style={{ marginTop: 12 }}>
-            <Label>Group</Label>
+            <Label htmlFor="what">01 · What are you planning?</Label>
+            <Input id="what" placeholder="e.g. Basketball" value={what} onChange={(e) => setWhat(e.target.value)} autoFocus />
+          </div>
+          <div className="field">
+            <Label>02 · Group</Label>
             <div className="chiprow">
               {groups.map((g) => (
                 <button
@@ -231,30 +235,7 @@ export function Hangouts() {
             </div>
           </div>
           <div className="field">
-            <Label htmlFor="what">What are you planning?</Label>
-            <Input id="what" placeholder="e.g. Basketball" value={what} onChange={(e) => setWhat(e.target.value)} autoFocus />
-          </div>
-          <div className="field">
-            <Label htmlFor="where">Where? (optional)</Label>
-            <Input
-              id="where"
-              placeholder="e.g. Nuvali"
-              value={where}
-              onChange={(e) => {
-                setWhere(e.target.value);
-                // Renamed by hand: the old pin no longer describes this text.
-                if (pin && e.target.value !== pin.name) setPin(null);
-              }}
-            />
-            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-              <button type="button" className="btn btn-paper btn-sm" onClick={() => setPickerOpen(true)}>
-                <MapPin size={15} /> {pin ? 'Change pin' : 'Pin a location'}
-              </button>
-              {pin && <span className="small muted">Exact map location saved</span>}
-            </div>
-          </div>
-          <div className="field">
-            <Label>When?</Label>
+            <Label>03 · When?</Label>
             <span className="kicker">QUICK PICK</span>
             <div className="chiprow" style={{ marginTop: 8 }}>
               {WHEN_PRESETS.map((preset) => (
@@ -294,9 +275,28 @@ export function Hangouts() {
               Selected: <b>{describeHangoutWhen(whenDate)}</b>
             </p>
           </div>
+          <div className="field">
+            <Label htmlFor="where">04 · Where? (optional)</Label>
+            <Input
+              id="where"
+              placeholder="e.g. Nuvali"
+              value={where}
+              onChange={(e) => {
+                setWhere(e.target.value);
+                // Renamed by hand: the old pin no longer describes this text.
+                if (pin && e.target.value !== pin.name) setPin(null);
+              }}
+            />
+            <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <button type="button" className="btn btn-paper btn-sm" onClick={() => setPickerOpen(true)}>
+                <MapPin size={15} /> {pin ? 'Change pin' : 'Pin a location'}
+              </button>
+              {pin && <span className="small muted">Exact map location saved</span>}
+            </div>
+          </div>
           <FieldError message={error} />
           <Button type="submit" variant="green" size="bigBlock" disabled={createMut.isPending}>
-            {createMut.isPending ? 'Asking…' : 'Ask the group'}
+            {createMut.isPending ? 'Asking…' : (<>Create hangout <ArrowRight size={18} /></>)}
           </Button>
         </form>
         {pickerOpen && (

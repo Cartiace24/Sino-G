@@ -51,14 +51,14 @@ export function Today() {
           rows: await availabilityService.listForDate(ids, d),
         })),
       );
-      let best: { date: string; label: string; free: number; total: number; score: number } | null = null;
+      let best: { date: string; label: string; window: string; free: number; total: number; score: number } | null = null;
       for (const { date, rows } of perDay) {
         const slots = calculateGroupAvailability(ids, rows);
         const found = findBestSlot(slots);
         // Compare true scores: free count alone ignores maybe-points and can
         // crown a lower-scoring day.
         if (found && (!best || found.slot.score > best.score)) {
-          best = { date, label: found.slot.label, free: found.slot.free, total: ids.length, score: found.slot.score };
+          best = { date, label: found.slot.label, window: found.window.label, free: found.slot.free, total: ids.length, score: found.slot.score };
         }
       }
       return best;
@@ -140,9 +140,36 @@ export function Today() {
               </span>
             </div>
           )}
-          <button className="btn btn-line btn-sm" onClick={() => navigate(`/groups/${groups[0].id}`)} style={{ marginTop: 10 }}>
-            See who&apos;s free <ArrowRight size={16} />
-          </button>
+          {tonight.summary.freeNow.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <span className="kicker">AVAILABLE NOW</span>
+              <div className="rows" style={{ marginTop: 6 }}>
+                {tonight.summary.freeNow.slice(0, 4).map((id) => (
+                  <div className="member-row" key={id}>
+                    <Avatar name={tonight.people[id]?.name ?? '?'} src={tonight.people[id]?.photo ?? null} size="sm" />
+                    <span className="who">
+                      <strong>{tonight.people[id]?.name ?? 'Someone'}</strong>
+                      <small>Free · Now</small>
+                    </span>
+                    <span className="right"><span className="dot free" /></span>
+                  </div>
+                ))}
+              </div>
+              {tonight.summary.freeNow.length > 4 && (
+                <p className="small muted" style={{ marginTop: 6 }}>
+                  +{tonight.summary.freeNow.length - 4} more free right now
+                </p>
+              )}
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: 10, marginTop: 10, flexWrap: 'wrap' }}>
+            <button className="btn btn-line btn-sm" onClick={() => navigate(`/groups/${groups[0].id}`)}>
+              See who&apos;s free <ArrowRight size={16} />
+            </button>
+            <button className="btn btn-paper btn-sm" onClick={() => navigate('/availability')}>
+              Set my availability
+            </button>
+          </div>
         </div>
         <div>
           <div className="besthero">
@@ -158,7 +185,7 @@ export function Today() {
                       {bestQ.data.free}
                       <span style={{ fontSize: 22 }}>/{bestQ.data.total}</span>
                     </div>
-                    <p>available · {bestQ.data.label}</p>
+                    <p>{bestQ.data.window} · {bestQ.data.free} free</p>
                   </div>
                   <button className="btn btn-green btn-sm" onClick={() => navigate(`/groups/${groups[0].id}/availability`)}>
                     View plan <ArrowUpRight size={15} />
