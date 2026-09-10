@@ -1,7 +1,8 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { CalendarDays, Clock, Sun, User, Zap } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useRealtimeNotifications } from '../../hooks/useNotifications';
+import { useMyGroups } from '../../hooks/useGroups';
+import { useRealtimeNotifications, useUnreadChatGroups } from '../../hooks/useNotifications';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '../../lib/utils';
 
@@ -15,6 +16,10 @@ export function AppShell() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { profile, user } = useAuth();
+  const { data: myGroups } = useMyGroups(user?.id);
+  const unreadChat = useUnreadChatGroups(user?.id);
+  const chatGroups = (myGroups ?? []).slice(0, 5);
+  const extraChats = (myGroups ?? []).length - chatGroups.length;
   // Single app-wide inbox subscription (self-guards when logged out).
   useRealtimeNotifications();
   const isPublic = PUBLIC_PATHS.includes(pathname);
@@ -60,6 +65,29 @@ export function AppShell() {
             <span>ME</span>
           </NavLink>
         </nav>
+        {chatGroups.length > 0 && (
+          <nav className="side-chats" aria-label="Group chats">
+            <span className="side-chats-kicker">CHATS</span>
+            {chatGroups.map((g) => (
+              <NavLink
+                key={g.id}
+                to={`/groups/${g.id}/chat`}
+                className={({ isActive }) => cn('side-chat', isActive && 'active')}
+              >
+                <span className="mini-avatar" aria-hidden>
+                  {g.name.trim()[0]?.toUpperCase() ?? '?'}
+                </span>
+                <span className="name">{g.name}</span>
+                {unreadChat.has(g.id) && <span className="dot free" role="img" aria-label="Unread messages" />}
+              </NavLink>
+            ))}
+            {extraChats > 0 && (
+              <Link className="small muted" to="/groups" style={{ padding: '4px 12px' }}>
+                +{extraChats} more
+              </Link>
+            )}
+          </nav>
+        )}
         <div className="side-foot">
           <button className="btn btn-green btn-block" onClick={() => navigate('/g')}>
             + Start a hangout

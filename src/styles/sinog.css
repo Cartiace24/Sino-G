@@ -56,6 +56,18 @@ input,select,textarea{font:inherit;color:inherit}
   .side-nav a svg{width:19px;height:19px}
   .side-nav a.active{background:var(--ink);color:#fff}
   .side-nav a.active svg{stroke:var(--green)}
+  /* Per-group chat shortcuts. Rendered only when the user has groups. */
+  .side-chats{margin-top:2px;display:flex;flex-direction:column;gap:2px;min-height:0;overflow-y:auto;flex:0 1 auto}
+  .side-chats-kicker{font-size:10.5px;font-weight:800;letter-spacing:.16em;color:var(--muted);padding:8px 12px 2px}
+  .side-chat{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:10px;
+    font-size:13px;font-weight:700;color:var(--ink-2);width:100%;text-align:left}
+  .side-chat:hover{background:var(--bg-deep)}
+  .side-chat.active{background:var(--ink);color:#fff}
+  .side-chat .mini-avatar{width:26px;height:26px;border-radius:8px;background:var(--ink);color:var(--green);
+    display:grid;place-items:center;font-family:var(--font-d);font-weight:900;font-size:11px;flex-shrink:0}
+  .side-chat.active .mini-avatar{background:var(--green);color:var(--ink)}
+  .side-chat .name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .side-chat .dot{margin-left:auto}
   .side-g{position:relative}
   /* Activity dot: vertically centered with the label, subtle and small. */
   .live-dot{position:absolute;right:12px;top:50%;transform:translateY(-50%);
@@ -415,6 +427,7 @@ textarea.input{padding:14px 16px;min-height:88px;resize:vertical}
 [data-theme="dark"] .welcome-giant span{color:#181817}
 /* Selected controls keep light text off dark ink pills. */
 [data-theme="dark"] .side-nav a.active,
+[data-theme="dark"] .side-chat.active,
 [data-theme="dark"] .day.sel,
 [data-theme="dark"] .daytab.sel,
 [data-theme="dark"] .time-chip.sel,
