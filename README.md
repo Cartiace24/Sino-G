@@ -1,4 +1,4 @@
-# SINO G
+# SINO G?
 
 **Stop asking the group chat. See who's free.**
 
