@@ -45,6 +45,9 @@ export function Plan() {
   const [date, setDate] = useState(todayISO());
   const [slotIdx, setSlotIdx] = useState<number | null>(null);
   const [preset, setPreset] = useState<WindowPreset>('all');
+  // Local group selection for /plan (no URL param) so switching groups
+  // stays on the Plan tab and just swaps whose availability is shown.
+  const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
   const [customFrom, setCustomFrom] = useState('18:00');
   const [customUntil, setCustomUntil] = useState('23:00');
   // Shared dropdown calendar (month math + outside-click live in the hook).
@@ -75,8 +78,25 @@ export function Plan() {
 
   const groupsQ = useMyGroups(user?.id);
   const groups = groupsQ.data ?? [];
-  const groupId = paramGroupId ?? groups[0]?.id;
+  // Deep-link (/groups/:id/availability) wins; otherwise use the locally
+  // picked group. Ignore a stale local pick (e.g. group left/deleted).
+  const validSelectedGroupId =
+    selectedGroupId && groups.some((g) => g.id === selectedGroupId) ? selectedGroupId : null;
+  const groupId = paramGroupId ?? validSelectedGroupId ?? groups[0]?.id;
   const group = groups.find((g) => g.id === groupId) ?? groups[0];
+
+  const pickGroup = (id: string) => {
+    setSlotIdx(null);
+    if (paramGroupId) {
+      // Already in a per-group URL — keep the URL truthful, stay in the
+      // same availability view (no redirect to the group page).
+      if (id !== paramGroupId) navigate(`/groups/${id}/availability`);
+    } else {
+      // On /plan — switch in place so the Plan tab stays active and we
+      // just show who's free for the picked group.
+      setSelectedGroupId(id);
+    }
+  };
 
   const { membersQ, rowsQ, memberIds, slots, best } = useGroupAvailability(group?.id, date, range);
   useRealtimeAvailability(group?.id);
@@ -140,13 +160,15 @@ export function Plan() {
         EVERYONE <span className="accent">FREE?</span>
       </h1>
 
-      {!paramGroupId && groups.length > 1 && (
-        <div className="daytabs sec-sm">
+      {groups.length > 1 && (
+        <div className="daytabs sec-sm" role="tablist" aria-label="Switch group">
           {groups.map((g) => (
             <button
               key={g.id}
+              role="tab"
+              aria-selected={g.id === group?.id}
               className={`daytab${g.id === group?.id ? ' sel' : ''}`}
-              onClick={() => navigate(`/groups/${g.id}/availability`)}
+              onClick={() => pickGroup(g.id)}
             >
               {g.name.toUpperCase()}
             </button>
