@@ -1,17 +1,25 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, Plus, Users } from 'lucide-react';
+import { MessageCircle, Plus, Search, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useMyGroups, useRealtimeGroupsList } from '../../hooks/useGroups';
+import { useUnreadChatGroups } from '../../hooks/useNotifications';
 import { EmptyState, ErrorState, LoadingRows } from '../../components/common/Feedback';
 import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
 
 export function Groups() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const groupsQ = useMyGroups(user?.id);
   const groups = groupsQ.data ?? [];
-  // Member joins/leaves/role changes and renames land without refresh.
+  const unreadChat = useUnreadChatGroups(user?.id);
+  const [query, setQuery] = useState('');
+  // Group counts/visibility stay current as membership churns.
   useRealtimeGroupsList();
+
+  const q = query.trim().toLowerCase();
+  const visible = q ? groups.filter((g) => g.name.toLowerCase().includes(q)) : groups;
 
   return (
     <>
@@ -48,26 +56,51 @@ export function Groups() {
           />
         </div>
       ) : (
-        <div className="rows" style={{ marginTop: 12 }}>
-          {groups.map((g) => (
-            <button key={g.id} className="group-row" onClick={() => navigate(`/groups/${g.id}`)}>
-              {g.avatar_url ? (
-                <img src={g.avatar_url} alt="" className="gavatar" style={{ objectFit: 'cover' }} />
-              ) : (
-                <span className="gavatar">
-                  {g.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
-                </span>
-              )}
-              <span className="gmeta">
-                <strong>{g.name}</strong>
-                <span className="countline">
-                  {g.member_count} MEMBERS · {g.my_role.toUpperCase()}
-                </span>
-              </span>
-              <ArrowRight size={18} style={{ marginLeft: 'auto', color: 'var(--muted)' }} />
-            </button>
-          ))}
-        </div>
+        <>
+          <div className="chat-search">
+            <Search size={16} aria-hidden />
+            <Input
+              type="search"
+              placeholder="Search chats..."
+              aria-label="Search groups"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          {visible.length === 0 ? (
+            <div style={{ marginTop: 12 }}>
+              <EmptyState
+                icon={<Search size={30} />}
+                title="No matches."
+                body={`Nothing named "${query.trim()}".`}
+              />
+            </div>
+          ) : (
+            <div className="rows" style={{ marginTop: 4 }}>
+              {visible.map((g) => (
+                <button key={g.id} className="group-row" onClick={() => navigate(`/groups/${g.id}/chat`)}>
+                  {g.avatar_url ? (
+                    <img src={g.avatar_url} alt="" className="gavatar" style={{ objectFit: 'cover' }} />
+                  ) : (
+                    <span className="gavatar">
+                      {g.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+                    </span>
+                  )}
+                  <span className="gmeta">
+                    <strong>{g.name}</strong>
+                    <span className="countline">
+                      {g.member_count} MEMBERS · {g.my_role.toUpperCase()}
+                    </span>
+                  </span>
+                  <span style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {unreadChat.has(g.id) && <span className="dot free" aria-label="Unread messages" />}
+                    <MessageCircle size={18} style={{ color: 'var(--muted)' }} aria-hidden />
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       <button className="choice" onClick={() => navigate('/onboarding/group')} style={{ marginTop: 18 }}>

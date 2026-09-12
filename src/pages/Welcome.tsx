@@ -1,6 +1,7 @@
-import { Link, Navigate } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
+import { CalendarDays, MessageCircle, Users } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { LoginCard } from '../components/auth/LoginCard';
 
 export function Welcome() {
   const { user, loading, isRecoverySession } = useAuth();
@@ -9,36 +10,39 @@ export function Welcome() {
   if (!loading && user && !isRecoverySession) return <Navigate to="/today" replace />;
 
   return (
-    <div className="welcome-hero">
-      <p className="kicker">FOR FRIEND GROUPS · BARKADAS · CREWS</p>
-      <h1 className="welcome-giant">
-        SINO
-        <br />
-        <span>G?</span>
-      </h1>
-      <p className="lede" style={{ marginTop: 14, fontSize: 18, color: 'var(--ink)' }}>
-        <strong>
-          Stop asking the group chat.
+    <div className="landing">
+      <div className="landing-brand">
+        <p className="kicker">FOR FRIEND GROUPS · BARKADAS · CREWS</p>
+        <h1 className="welcome-giant">
+          SINO
           <br />
-          See who&apos;s free.
-        </strong>
-      </p>
-      <div className="ticker">
-        <div>
-          &nbsp;WHO&apos;S FREE TODAY? &nbsp;●&nbsp; SINO G? &nbsp;●&nbsp; FIND YOUR BEST TIME
-          &nbsp;●&nbsp; ASK THE GROUP &nbsp;●&nbsp; WHO&apos;S FREE TODAY? &nbsp;●&nbsp; SINO G?
-          &nbsp;●&nbsp; FIND YOUR BEST TIME &nbsp;●&nbsp; ASK THE GROUP &nbsp;●&nbsp;
+          <span>G?</span>
+        </h1>
+        <p className="landing-tag">
+          <strong>
+            Stop asking the group chat.
+            <br />
+            See who&apos;s free.
+          </strong>
+        </p>
+        <div className="landing-feats">
+          <span>
+            <Users size={19} aria-hidden />
+            Plan hangouts
+          </span>
+          <span>
+            <MessageCircle size={19} aria-hidden />
+            Group chat
+          </span>
+          <span>
+            <CalendarDays size={19} aria-hidden />
+            Check availability
+          </span>
         </div>
       </div>
-      <Link className="btn btn-green btn-block btn-big" to="/register">
-        Get Started <ArrowRight size={18} />
-      </Link>
-      <p className="small muted" style={{ textAlign: 'center', marginTop: 14 }}>
-        Already have an account?{' '}
-        <Link className="link-u" to="/login">
-          Log in
-        </Link>
-      </p>
+      <div className="landing-card">
+        <LoginCard idPrefix="welcome" />
+      </div>
     </div>
   );
 }

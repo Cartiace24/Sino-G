@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Send, Trash2, Users } from 'lucide-react';
+import { ArrowLeft, CalendarCheck, Info, MessageCircle, Send, Trash2, Users } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useGroup, useMyGroups, useRealtimeGroup } from '../../hooks/useGroups';
 import {
@@ -9,6 +9,7 @@ import {
   useRealtimeGroupChat,
   useSendMessage,
 } from '../../hooks/useChat';
+import { useGroupHangouts } from '../../hooks/useHangouts';
 import { useMarkGroupChatRead, useUnreadChatGroups } from '../../hooks/useNotifications';
 import { CHAT_MAX_LENGTH } from '../../services/chat.service';
 import { timeAgo } from '../../utils/time';
@@ -101,6 +102,9 @@ export function GroupChat() {
 
   const group = groupQ.data;
   const memberCount = myGroupsQ.data?.find((g) => g.id === groupId)?.member_count;
+  // Latest active hangout surfaces as the "planned" card, like the reference.
+  const hangoutsQ = useGroupHangouts(groupId, true);
+  const nextHangout = hangoutsQ.data?.[0];
 
   const items = useMemo<MessageWithSender[]>(
     () =>
@@ -195,15 +199,49 @@ export function GroupChat() {
 
   return (
     <>
-      <Link className="backlink" to={`/groups/${group.id}`} style={{ marginTop: 14 }}>
-        <ArrowLeft size={16} /> {group.name.toUpperCase().slice(0, 18)}
-      </Link>
-      <p className="kicker">SINO G · GROUP CHAT</p>
-      <h1 className="display md">CHAT</h1>
-      <p className="small muted" style={{ marginTop: 6 }}>
-        {group.name}
-        {memberCount != null ? ` · ${memberCount} member${memberCount === 1 ? '' : 's'}` : ''}
-      </p>
+      <div className="chat-head">
+        <button
+          type="button"
+          className="chat-back"
+          onClick={() => navigate('/groups')}
+          aria-label="Back to chats"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        {group.avatar_url ? (
+          <img src={group.avatar_url} alt="" className="chat-head-avatar" style={{ objectFit: 'cover' }} />
+        ) : (
+          <span className="chat-head-avatar" aria-hidden>
+            {group.name.trim()[0]?.toUpperCase() ?? '?'}
+          </span>
+        )}
+        <div className="chat-head-meta">
+          <strong>{group.name}</strong>
+          <small>
+            {memberCount != null ? `${memberCount} member${memberCount === 1 ? '' : 's'}` : 'Group chat'}
+          </small>
+        </div>
+        <Link className="chat-head-btn" to={`/groups/${group.id}`} aria-label={`View ${group.name}`}>
+          <Info size={18} />
+        </Link>
+      </div>
+
+      {nextHangout && (
+        <button type="button" className="chat-banner" onClick={() => navigate(`/g/${nextHangout.id}`)}>
+          <span className="chat-banner-icon" aria-hidden>
+            <CalendarCheck size={18} />
+          </span>
+          <span className="chat-banner-meta">
+            <strong>Hangout planned</strong>
+            <small>
+              {(nextHangout.title ?? 'Hangout') + (nextHangout.message ? ` · ${nextHangout.message}` : '')}
+            </small>
+          </span>
+          <span className="chat-banner-go" aria-hidden>
+            ›
+          </span>
+        </button>
+      )}
 
       <div style={{ marginTop: 6 }}>
         {messagesQ.isLoading ? (
@@ -311,7 +349,7 @@ export function GroupChat() {
         </button>
       )}
       <form className="chat-composer" onSubmit={onSubmit}>
-        <div className="field" style={{ marginBottom: 8 }}>
+        <div className="chat-composer-row">
           <textarea
             ref={taRef}
             className="input"
@@ -324,15 +362,23 @@ export function GroupChat() {
             aria-label="Message the group"
             style={{ resize: 'none', overflowY: 'auto', maxHeight: 124 }}
           />
+          <button
+            type="submit"
+            className="chat-send"
+            disabled={!draft.trim() || sendMut.isPending}
+            aria-label={sendMut.isPending ? 'Sending…' : 'Send message'}
+          >
+            <Send size={18} />
+          </button>
         </div>
-        <div className="row-between">
-          <span className="small muted">
-            {draft.length > CHAT_MAX_LENGTH - 100 ? `${draft.length}/${CHAT_MAX_LENGTH}` : ''}
-          </span>
-          <Button type="submit" variant="green" size="sm" disabled={!draft.trim() || sendMut.isPending}>
-            <Send size={15} /> {sendMut.isPending ? 'Sending…' : 'Send'}
-          </Button>
-        </div>
+        {draft.length > CHAT_MAX_LENGTH - 100 && (
+          <div className="row-between" style={{ marginTop: 4 }}>
+            <span />
+            <span className="small muted">
+              {draft.length}/{CHAT_MAX_LENGTH}
+            </span>
+          </div>
+        )}
       </form>
     </>
   );
