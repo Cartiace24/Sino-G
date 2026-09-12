@@ -65,7 +65,7 @@ input,select,textarea{font:inherit;color:inherit}
   .side-nav a svg{width:19px;height:19px;flex-shrink:0}
   .side-nav a:hover{background:var(--bg-deep);color:var(--ink)}
   .side-nav a.active{background:var(--ink);color:#fff;border-color:var(--ink)}
-  .side-nav a.active svg{stroke:var(--green)}
+  /* Single active cue is the lime dot (::after) — icons stay neutral. */
   .side-nav a.active::after{content:"";position:absolute;right:12px;top:50%;transform:translateY(-50%);
     width:6px;height:6px;border-radius:50%;background:var(--green)}
   /* Per-group chat shortcuts. Rendered only when the user has groups. */
@@ -289,7 +289,6 @@ button.group-row:hover{background:var(--bg-deep)}
 .day strong{font-family:var(--font-d);font-size:18px}
 .day .dot{margin:5px auto 0}
 .day.sel{border-color:var(--ink);background:var(--ink);color:#fff}
-.day.sel b{color:var(--green)}
 .timegrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .time-chip{border:1.5px solid var(--line);background:var(--paper);border-radius:10px;padding:12px;font-weight:700;font-size:14px;text-align:center}
 .time-chip.sel{border-color:var(--ink);background:var(--ink);color:#fff}
@@ -310,7 +309,7 @@ button.group-row:hover{background:var(--bg-deep)}
 .bar-row.best .bar-fill{background:var(--green-deep)}
 .bar-row.best .t{color:var(--ink)}
 .bar-row .n{font-family:var(--font-d);font-weight:800;font-size:13px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-.tag-best{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--green);
+.tag-best{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--bg);
   font-size:10.5px;font-weight:800;letter-spacing:.14em;padding:5px 10px;border-radius:999px}
 .besthero{background:#141412;color:#F4F1E8;border:1px solid var(--line);border-radius:14px;padding:20px;margin:14px 0;position:relative;overflow:hidden}
 .besthero .kicker{color:var(--green)}
@@ -612,7 +611,10 @@ button.hangitem:hover{background:var(--bg-deep)}
   --muted:#9C998E;
   --line:#262622;
   --line-soft:#1C1C1A;
-  --green-deep:#B6D83B;
+  /* Dark-only lime lift: near-black absorbs light, so the brand lime runs
+     one step brighter here. Light mode keeps the original #B6D83B. */
+  --green:#C2EE3F;
+  --green-deep:#C2EE3F;
   --green-wash:#22290F;
   --free:#9BDB3E;
   --maybe:#f0a832;
