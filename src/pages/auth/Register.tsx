@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth.service';
 import { friendlyError } from '../../utils/errors';
 import { useToast } from '../../components/common/Toast';
+import { LoadingRows } from '../../components/common/Feedback';
 import { Button } from '../../components/ui/button';
 import { FieldError, Input, Label, PasswordInput } from '../../components/ui/input';
 
@@ -30,6 +31,15 @@ export function Register() {
   const [googleBusy, setGoogleBusy] = useState(false);
 
   if (!loading && user && !isRecoverySession) return <Navigate to="/today" replace />;
+
+  // Boot gate like Login: don't flash the signup form during session restore.
+  if (loading) {
+    return (
+      <div className="auth-wrap">
+        <LoadingRows rows={3} />
+      </div>
+    );
+  }
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
