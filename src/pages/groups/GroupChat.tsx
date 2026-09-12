@@ -237,54 +237,61 @@ export function GroupChat() {
                 </Button>
               </div>
             )}
-            <div className="rows" style={{ marginTop: 8 }}>
+            <div className="chat-list">
               {items.map((m, i) => {
                 const meta = showMeta(items[i - 1], m);
                 const newDay = i === 0 || !sameLocalDay(items[i - 1].created_at, m.created_at);
                 const mine = m.sender_id === user?.id;
+                const senderName = mine ? 'You' : (m.sender?.display_name ?? 'Someone');
                 return (
                   <div key={m.id}>
                     {newDay && (
-                      <div style={{ textAlign: 'center', margin: '10px 0 2px' }}>
-                        <span className="kicker" style={{ background: 'var(--bg-deep)', borderRadius: 999, padding: '4px 12px' }}>
-                          {dayDividerLabel(m.created_at)}
-                        </span>
+                      <div className="chat-day">
+                        <span>{dayDividerLabel(m.created_at)}</span>
                       </div>
                     )}
-                  <div className="member-row" style={{ alignItems: 'flex-start' }}>
-                    {meta ? (
-                      <Avatar name={m.sender?.display_name ?? '?'} src={m.sender?.avatar_url} size="sm" />
-                    ) : (
-                      <span style={{ width: 32, flexShrink: 0 }} />
-                    )}
-                    <span className="who">
-                      {meta && (
-                        <strong>
-                          {mine ? 'You' : (m.sender?.display_name ?? 'Someone')}
-                          <span className="muted small" style={{ fontWeight: 400 }}>
-                            {' '}
-                            · {timeAgo(m.created_at)}
-                          </span>
-                        </strong>
+                    <div className={`chat-row${mine ? ' mine' : ''}`}>
+                      {meta ? (
+                        <Avatar
+                          name={m.sender?.display_name ?? '?'}
+                          src={m.sender?.avatar_url}
+                          size="sm"
+                          className="chat-avatar"
+                        />
+                      ) : (
+                        <span className="chat-avatar ph" aria-hidden />
                       )}
-                      {/* Plain text only: React escapes content, never innerHTML. */}
-                      <small style={{ fontSize: 14.5, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>
-                        {m.content}
-                      </small>
-                    </span>
-                    <span className="right">
-                      {mine && (
-                        <button
-                          aria-label="Delete message"
-                          disabled={deleteMut.isPending}
-                          onClick={() => onDelete(m)}
-                          style={{ color: 'var(--muted)', display: 'grid', placeItems: 'center', padding: 6 }}
+                      <div className="chat-body">
+                        {meta && (
+                          <div className="chat-meta">
+                            <span className="chat-name">{senderName}</span>
+                            <span className="chat-time">{timeAgo(m.created_at)}</span>
+                          </div>
+                        )}
+                        <div
+                          style={{
+                            display: 'flex',
+                            gap: 4,
+                            alignItems: 'flex-end',
+                            flexDirection: mine ? 'row-reverse' : 'row',
+                          }}
                         >
-                          <Trash2 size={15} />
-                        </button>
-                      )}
-                    </span>
-                  </div>
+                          {/* Plain text only: React escapes content, never innerHTML. */}
+                          <p className="chat-bubble">{m.content}</p>
+                          {mine && (
+                            <button
+                              type="button"
+                              className="chat-del"
+                              aria-label="Delete message"
+                              disabled={deleteMut.isPending}
+                              onClick={() => onDelete(m)}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 );
               })}
@@ -296,32 +303,14 @@ export function GroupChat() {
       {newCount > 0 && (
         <button
           type="button"
-          className="btn btn-dark btn-sm"
+          className="btn btn-dark btn-sm chat-new"
           onClick={jumpToLatest}
           aria-live="polite"
-          style={{
-            position: 'fixed',
-            bottom: 208,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            zIndex: 30,
-            borderRadius: 999,
-            boxShadow: '0 8px 24px rgba(24,24,23,.25)',
-          }}
         >
           ↓ {newCount} new message{newCount === 1 ? '' : 's'}
         </button>
       )}
-      <form
-        onSubmit={onSubmit}
-        style={{
-          position: 'sticky',
-          bottom: 84,
-          background: 'var(--bg)',
-          padding: '12px 0 6px',
-          marginTop: 12,
-        }}
-      >
+      <form className="chat-composer" onSubmit={onSubmit}>
         <div className="field" style={{ marginBottom: 8 }}>
           <textarea
             ref={taRef}
@@ -330,7 +319,7 @@ export function GroupChat() {
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Message the group..."
+            placeholder="Type a message..."
             maxLength={CHAT_MAX_LENGTH + 1}
             aria-label="Message the group"
             style={{ resize: 'none', overflowY: 'auto', maxHeight: 124 }}

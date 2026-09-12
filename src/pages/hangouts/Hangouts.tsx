@@ -219,7 +219,7 @@ export function Hangouts() {
         See who&apos;s ready to hang out. No planning thread needed.
       </p>
       <Button
-        variant="dark"
+        variant="green"
         size="bigBlock"
         onClick={() => {
           setShowForm((s) => !s);

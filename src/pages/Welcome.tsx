@@ -30,7 +30,7 @@ export function Welcome() {
           &nbsp;●&nbsp; FIND YOUR BEST TIME &nbsp;●&nbsp; ASK THE GROUP &nbsp;●&nbsp;
         </div>
       </div>
-      <Link className="btn btn-dark btn-block btn-big" to="/register">
+      <Link className="btn btn-green btn-block btn-big" to="/register">
         Get Started <ArrowRight size={18} />
       </Link>
       <p className="small muted" style={{ textAlign: 'center', marginTop: 14 }}>
